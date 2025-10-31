@@ -1,0 +1,12 @@
+---
+apiVersion: v2
+name: argocd-bootstrap
+description: ArgoCD installation for Mosher Labs homelab
+type: application
+version: 1.0.0
+appVersion: "v2.12.6"
+
+dependencies:
+  - name: argo-cd
+    version: 7.6.12
+    repository: https://argoproj.github.io/argo-helm

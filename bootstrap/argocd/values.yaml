@@ -1,0 +1,47 @@
+---
+# ArgoCD Helm Chart Values
+# This will be managed by ArgoCD itself after bootstrap
+
+global:
+  domain: argocd.benniemosher.dev
+
+configs:
+  params:
+    server.insecure: true # Using Cloudflare tunnel
+
+server:
+  service:
+    type: NodePort # We'll keep NodePort for now
+  # ArgoCD will manage itself and reference your repos
+  config:
+    repositories: |
+      - type: git
+        url: https://github.com/Mosher-Labs/homelab-gitops.git
+      - type: git
+        url: https://github.com/Mosher-Labs/helm-charts.git
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Resource limits for homelab
+controller:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+repoServer:
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
