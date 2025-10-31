@@ -1,0 +1,22 @@
+# Kubernetes
+*.kubeconfig
+kubeconfig
+k3s.yaml
+
+# Helm
+*.tgz
+.helm/
+
+# Secrets (just in case)
+*secret*.yaml
+*sealed*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
