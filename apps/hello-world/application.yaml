@@ -19,7 +19,7 @@ spec:
     repoURL: https://github.com/Mosher-Labs/helm-charts.git
     # Which branch/tag to use - temporarily using feature branch for testing
     # Change back to 'main' after merging the PR
-    targetRevision: feature/make-cloudflared-optional
+    targetRevision: main
     # Path to the hello-world chart within the repo
     path: hello-world
     # This tells ArgoCD it's a Helm chart
