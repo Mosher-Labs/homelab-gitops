@@ -1,0 +1,62 @@
+---
+# ArgoCD Application for Hello World
+# Deploys hello-world Helm chart from helm-charts repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-world
+  namespace: argocd
+  # Finalizer ensures cascade delete of deployed resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project: grouping/permission boundary
+  project: default
+
+  # SOURCE: Where is the Helm chart?
+  source:
+    # Your helm-charts repository
+    repoURL: https://github.com/Mosher-Labs/helm-charts.git
+    # Which branch/tag to use - temporarily using feature branch for testing
+    # Change back to 'main' after merging the PR
+    targetRevision: main
+    # Path to the hello-world chart within the repo
+    path: hello-world
+    # This tells ArgoCD it's a Helm chart
+    helm:
+      # Which values file to use (optional - uses values.yaml by default)
+      valueFiles:
+        - values.yaml
+      # Override values for this specific deployment
+      # This overrides what's in values.yaml
+      values: |
+        # Disable cloudflared for now - we don't have credentials yet
+        cloudflared:
+          enabled: false
+
+  # DESTINATION: Where should it be deployed?
+  destination:
+    # Kubernetes cluster (in-cluster API)
+    server: https://kubernetes.default.svc
+    # Target namespace
+    namespace: hello-world
+
+  # SYNC POLICY: How should ArgoCD keep things in sync?
+  syncPolicy:
+    # Automated sync: auto-deploy on Git push
+    automated:
+      # Prune: delete resources removed from Git
+      prune: true
+      # SelfHeal: revert manual cluster changes to match Git
+      selfHeal: true
+    # Sync options
+    syncOptions:
+      # Create the namespace if it doesn't exist
+      - CreateNamespace=true
+    # Retry policy if sync fails
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
