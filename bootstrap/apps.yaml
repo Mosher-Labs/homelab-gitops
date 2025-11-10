@@ -1,0 +1,57 @@
+---
+# App of Apps Pattern
+# This Application manages all apps in the apps/ directory
+# Any new Application added to apps/ will be automatically deployed
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: apps
+  namespace: argocd
+  # Finalizer ensures cascade delete of all managed apps
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project: grouping/permission boundary
+  project: default
+
+  # SOURCE: Where are the app definitions?
+  source:
+    # This repository
+    repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+    # Which branch to use
+    targetRevision: main
+    # Path to the apps directory
+    path: apps
+    # Directory mode - ArgoCD will look for Application manifests
+    directory:
+      # Recurse into subdirectories
+      recurse: true
+      # Only process YAML files that define Applications
+      include: '*/application.yaml'
+
+  # DESTINATION: Where should the child apps be created?
+  destination:
+    # Kubernetes cluster (in-cluster API)
+    server: https://kubernetes.default.svc
+    # Child apps will be created in argocd namespace
+    namespace: argocd
+
+  # SYNC POLICY: How should ArgoCD keep things in sync?
+  syncPolicy:
+    # Automated sync: auto-deploy when new apps are added to Git
+    automated:
+      # Prune: delete apps removed from Git
+      prune: true
+      # SelfHeal: revert manual changes to match Git
+      selfHeal: true
+    # Sync options
+    syncOptions:
+      # Create the namespace if it doesn't exist
+      - CreateNamespace=true
+    # Retry policy if sync fails
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

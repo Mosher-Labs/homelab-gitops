@@ -30,9 +30,9 @@ spec:
       # Override values for this specific deployment
       # This overrides what's in values.yaml
       values: |
-        # Disable cloudflared for now - we don't have credentials yet
+        # Enable cloudflared - credentials are in the cluster secret
         cloudflared:
-          enabled: false
+          enabled: true
 
   # DESTINATION: Where should it be deployed?
   destination:
