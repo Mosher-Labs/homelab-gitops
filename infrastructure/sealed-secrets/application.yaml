@@ -1,10 +1,10 @@
 ---
-# ArgoCD Application for External Secrets Operator
-# Manages secrets from external sources (1Password, Vault, etc.)
+# ArgoCD Application for Sealed Secrets
+# Encrypts secrets so they can be safely stored in Git
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: external-secrets-operator
+  name: sealed-secrets
   namespace: argocd
   # Finalizer ensures cascade delete of deployed resources
   finalizers:
@@ -15,16 +15,16 @@ spec:
 
   # SOURCE: Where is the Helm chart?
   source:
-    # External Secrets Operator official Helm repo
-    repoURL: https://charts.external-secrets.io
-    # Which chart version to use
-    chart: external-secrets
-    targetRevision: 0.10.5
+    # Sealed Secrets official Helm repo
+    repoURL: https://bitnami-labs.github.io/sealed-secrets
+    # Which chart to use
+    chart: sealed-secrets
+    targetRevision: 2.16.2
     # Helm values
     helm:
       values: |
-        # Installation configuration
-        installCRDs: true
+        # Controller configuration
+        fullnameOverride: sealed-secrets-controller
 
         # Resource limits for homelab
         resources:
@@ -35,32 +35,28 @@ spec:
             cpu: 50m
             memory: 64Mi
 
-        # Webhook configuration
-        webhook:
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          fsGroup: 65534
 
-        # Cert controller configuration
-        certController:
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
+        # Create cluster role binding
+        rbac:
+          create: true
+          pspEnabled: false
+
+        # Service account
+        serviceAccount:
+          create: true
+          name: sealed-secrets-controller
 
   # DESTINATION: Where should it be deployed?
   destination:
     # Kubernetes cluster (in-cluster API)
     server: https://kubernetes.default.svc
     # Target namespace
-    namespace: external-secrets
+    namespace: kube-system
 
   # SYNC POLICY: How should ArgoCD keep things in sync?
   syncPolicy:
@@ -74,8 +70,6 @@ spec:
     syncOptions:
       # Create the namespace if it doesn't exist
       - CreateNamespace=true
-      # Replace resources instead of patching
-      - Replace=true
     # Retry policy if sync fails
     retry:
       limit: 5
