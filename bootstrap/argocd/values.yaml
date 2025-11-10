@@ -73,7 +73,7 @@ argo-cd:
 
   # HA: Application Controller with leader election
   controller:
-    replicas: 1
+    replicas: 3
     resources:
       limits:
         cpu: 500m
@@ -81,6 +81,18 @@ argo-cd:
       requests:
         cpu: 250m
         memory: 256Mi
+    # HA: Topology spread - ensure one pod per node
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: argocd-repo-server
+    # HA: Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 2
 
   repoServer:
     # HA: 3 replicas for Git operations
