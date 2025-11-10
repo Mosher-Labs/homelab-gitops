@@ -16,8 +16,7 @@ server:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hosts:
-      - argocd.mosher-labs.local
+    hostname: argocd.mosher-labs.local
     annotations:
       # ArgoCD serves HTTPS internally, tell Traefik to use HTTPS backend
       traefik.ingress.kubernetes.io/router.tls: "true"
