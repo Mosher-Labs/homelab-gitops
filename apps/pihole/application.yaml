@@ -19,52 +19,52 @@ spec:
       targetRevision: 2.34.0
       helm:
         valuesObject:
-        # Safe deployment - ClusterIP only, no network DNS exposure yet
-        serviceDns:
-          type: ClusterIP
-        serviceWeb:
-          type: ClusterIP
+          # Safe deployment - ClusterIP only, no network DNS exposure yet
+          serviceDns:
+            type: ClusterIP
+          serviceWeb:
+            type: ClusterIP
 
-        # Web UI ingress for management
-        ingress:
-          enabled: true
-          ingressClassName: traefik
-          hosts:
-            - pihole.mosher-labs.local
-          path: /
-          pathType: Prefix
+          # Web UI ingress for management
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - pihole.mosher-labs.local
+            path: /
+            pathType: Prefix
 
-        # Admin password - from sealed secret
-        admin:
-          enabled: true
-          existingSecret: "pihole-password"
-          passwordKey: "password"
+          # Admin password - from sealed secret
+          admin:
+            enabled: true
+            existingSecret: "pihole-password"
+            passwordKey: "password"
 
-        # Resource limits for homelab
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
+          # Resource limits for homelab
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
 
-        # Persistence for blocklists and config
-        persistentVolumeClaim:
-          enabled: true
-          accessModes:
-            - ReadWriteOnce
-          size: 1Gi
+          # Persistence for blocklists and config
+          persistentVolumeClaim:
+            enabled: true
+            accessModes:
+              - ReadWriteOnce
+            size: 1Gi
 
-        # DNS settings
-        DNS1: "1.1.1.1"  # Cloudflare upstream
-        DNS2: "1.0.0.1"  # Cloudflare upstream
+          # DNS settings
+          DNS1: "1.1.1.1"  # Cloudflare upstream
+          DNS2: "1.0.0.1"  # Cloudflare upstream
 
-        # Enable DNSSEC
-        DNSSEC: "true"
+          # Enable DNSSEC
+          DNSSEC: "true"
 
-        # Timezone
-        timezone: "America/Denver"
+          # Timezone
+          timezone: "America/Denver"
 
   destination:
     server: https://kubernetes.default.svc
