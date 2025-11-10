@@ -1,19 +1,112 @@
 ---
 # ArgoCD Helm Chart Values - HA Configuration
 # 3-replica setup for full redundancy across 3-node cluster
+# Values must be nested under 'argo-cd' for dependency chart
 
-global:
-  domain: argocd.benniemosher.dev
+argo-cd:
+  global:
+    domain: argocd.benniemosher.dev
 
-configs:
-  params:
-    server.insecure: true # Using Cloudflare tunnel
+  configs:
+    params:
+      server.insecure: true # Using Cloudflare tunnel
 
-# HA: Redis with Sentinel for automatic failover
-redis-ha:
-  enabled: true
-  haproxy:
+  # HA: Redis with Sentinel for automatic failover
+  redis-ha:
     enabled: true
+    haproxy:
+      enabled: true
+      replicas: 3
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+
+  # Disable single Redis instance
+  redis:
+    enabled: false
+
+  server:
+    # HA: 3 replicas - one per node
+    replicas: 3
+    service:
+      type: ClusterIP
+    # Ingress configuration for home network access
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hosts:
+        - argocd.mosher-labs.local
+      paths:
+        - /
+      pathType: Prefix
+      annotations: {}
+    # ArgoCD will manage itself and reference your repos
+    config:
+      repositories: |
+        - type: git
+          url: https://github.com/Mosher-Labs/homelab-gitops.git
+        - type: git
+          url: https://github.com/Mosher-Labs/helm-charts.git
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    # HA: Topology spread - ensure one pod per node
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: argocd-server
+    # HA: Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 2
+
+  # HA: Application Controller with leader election
+  controller:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  repoServer:
+    # HA: 3 replicas for Git operations
+    replicas: 3
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    # HA: Topology spread - ensure one pod per node
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: argocd-repo-server
+    # HA: Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 2
+
+  # HA: ApplicationSet Controller
+  applicationSet:
     replicas: 3
     resources:
       limits:
@@ -22,106 +115,15 @@ redis-ha:
       requests:
         cpu: 50m
         memory: 64Mi
-
-# Disable single Redis instance
-redis:
-  enabled: false
-
-server:
-  # HA: 3 replicas - one per node
-  replicas: 3
-  service:
-    type: ClusterIP
-  # Ingress configuration for home network access
-  ingress:
-    enabled: true
-    ingressClassName: traefik
-    hosts:
-      - argocd.mosher-labs.local
-    paths:
-      - /
-    pathType: Prefix
-    annotations: {}
-  # ArgoCD will manage itself and reference your repos
-  config:
-    repositories: |
-      - type: git
-        url: https://github.com/Mosher-Labs/homelab-gitops.git
-      - type: git
-        url: https://github.com/Mosher-Labs/helm-charts.git
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
-  # HA: Topology spread - ensure one pod per node
-  topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: DoNotSchedule
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/name: argocd-server
-  # HA: Pod Disruption Budget
-  pdb:
-    enabled: true
-    minAvailable: 2
-
-# HA: Application Controller with leader election
-controller:
-  replicas: 1
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 250m
-      memory: 256Mi
-
-repoServer:
-  # HA: 3 replicas for Git operations
-  replicas: 3
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
-  # HA: Topology spread - ensure one pod per node
-  topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: DoNotSchedule
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/name: argocd-repo-server
-  # HA: Pod Disruption Budget
-  pdb:
-    enabled: true
-    minAvailable: 2
-
-# HA: ApplicationSet Controller
-applicationSet:
-  replicas: 3
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
-  # HA: Topology spread
-  topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: DoNotSchedule
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/name: argocd-applicationset-controller
-  # HA: Pod Disruption Budget
-  pdb:
-    enabled: true
-    minAvailable: 2
+    # HA: Topology spread
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: argocd-applicationset-controller
+    # HA: Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 2
