@@ -7,3 +7,4 @@ rules:
       - .github/workflows
       - taskfiles/infra/Taskfile.yml
       - apps/*/sealed-secret.yaml
+      - apps/*/manifests/sealed-secret.yaml
