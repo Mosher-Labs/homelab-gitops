@@ -11,7 +11,16 @@ configs:
 
 server:
   service:
-    type: NodePort # We'll keep NodePort for now
+    type: ClusterIP
+  # Ingress configuration for home network access
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - argocd.mosher-labs.local
+    annotations:
+      # ArgoCD serves HTTPS internally, tell Traefik to use HTTPS backend
+      traefik.ingress.kubernetes.io/router.tls: "true"
   # ArgoCD will manage itself and reference your repos
   config:
     repositories: |
