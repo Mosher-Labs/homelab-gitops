@@ -5,7 +5,7 @@
 
 argo-cd:
   global:
-    domain: argocd.benniemosher.dev
+    domain: argocd.mosher-labs.local
 
   configs:
     params:
