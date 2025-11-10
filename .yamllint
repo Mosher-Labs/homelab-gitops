@@ -6,3 +6,4 @@ rules:
     ignore:
       - .github/workflows
       - taskfiles/infra/Taskfile.yml
+      - apps/*/sealed-secret.yaml

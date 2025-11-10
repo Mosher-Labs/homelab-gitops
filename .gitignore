@@ -9,6 +9,7 @@ k3s.yaml
 
 # Secrets (just in case)
 *secret*.yaml
+!*sealed-secret*.yaml
 *sealed*.key
 
 # OS
