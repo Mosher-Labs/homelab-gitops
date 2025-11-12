@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homebridge
+  namespace: homebridge
+  labels:
+    app: homebridge
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # Only one instance can use hostNetwork
+  selector:
+    matchLabels:
+      app: homebridge
+  template:
+    metadata:
+      labels:
+        app: homebridge
+    spec:
+      hostNetwork: true  # Required for mDNS/Bonjour and local device discovery
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: homebridge
+          image: homebridge/homebridge:latest
+          imagePullPolicy: Always
+          env:
+            - name: TZ
+              value: "America/Denver"
+            - name: HOMEBRIDGE_CONFIG_UI
+              value: "1"
+            - name: HOMEBRIDGE_CONFIG_UI_PORT
+              value: "8581"
+          ports:
+            - name: http
+              containerPort: 8581
+              protocol: TCP
+            - name: homekit
+              containerPort: 51826
+              protocol: TCP
+          volumeMounts:
+            - name: homebridge-data
+              mountPath: /homebridge
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8581
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8581
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: homebridge-data
+          persistentVolumeClaim:
+            claimName: homebridge-data
