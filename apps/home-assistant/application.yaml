@@ -1,0 +1,81 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Home Assistant Helm chart from gabe565
+    repoURL: https://charts.gabe565.com
+    chart: home-assistant
+    targetRevision: 0.25.1
+    helm:
+      valuesObject:
+        # Image settings
+        image:
+          repository: ghcr.io/home-assistant/home-assistant
+          tag: stable
+          pullPolicy: Always
+
+        # Enable host network for mDNS/Bonjour and local device discovery
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+
+        # Environment variables
+        env:
+          TZ: "America/Denver"
+
+        # Persistence for configuration and database
+        persistence:
+          config:
+            enabled: true
+            storageClass: ""  # Use default storage class
+            accessMode: ReadWriteOnce
+            size: 20Gi
+
+        # Ingress for web UI
+        ingress:
+          main:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - host: home-assistant.mosher-labs.local
+                paths:
+                  - path: /
+                    pathType: Prefix
+
+        # Resource limits for homelab
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+
+        # Security context - privileged for USB/Bluetooth devices
+        securityContext:
+          privileged: true
+
+        # Service configuration
+        service:
+          main:
+            type: ClusterIP
+            ports:
+              http:
+                port: 8123
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
