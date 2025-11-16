@@ -244,8 +244,12 @@ kubeseal --controller-namespace kube-system \
 ### Git Workflow
 
 1. **Create feature branch:** `git checkout -b feature/description`
-1. **Make changes** and commit with conventional commits format
-1. **Run pre-commit:** Automatically runs on commit
+1. **Make changes** to code/manifests/docs
+1. **ALWAYS run pre-commit BEFORE committing:**
+    - `pre-commit run --all-files` to check everything
+    - Fix ALL errors (especially markdown formatting)
+    - Do NOT commit with `--no-verify` unless absolutely necessary
+1. **Commit with conventional format:** `git commit -m "type: description"`
 1. **Push and create PR:** `gh pr create --title "feat: description"`
 1. **Merge to main:** ArgoCD automatically syncs changes
 
@@ -336,6 +340,7 @@ Example: Sealed secrets deploy before apps that consume them
 1. **Follow the ArgoCD Application pattern** shown in existing apps
 1. **Use sealed-secrets** for any credentials
 1. **Test locally first** with `kubectl apply --dry-run=client`
+1. **Run pre-commit hooks** BEFORE committing (fix all errors!)
 1. **Create CLAUDE.md** in any new repo or sub-project
 1. **Include CLAUDE.md updates in PRs** when patterns change
 
