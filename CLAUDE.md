@@ -328,10 +328,14 @@ code that needs fixing after running pre-commit hooks.
 
 **Markdown (markdownlint):**
 
-- Use 2-space indentation for nested lists under ordered lists
-- Use inline formatting instead of deeply nested lists when possible
-- Keep lines under 120 characters
-- Use consistent list marker styles
+Configuration: `.markdownlint.yaml` (allows 2-space indent, 120 char lines)
+
+- Nested lists under unordered items: Use 2-space indentation
+- Nested lists under ordered items: Use 2-space indentation
+- Inline format for simple nested items: `**Item:** Detail 1, Detail 2`
+- Line length: 120 characters max (code/tables excluded)
+- Bare URLs: Allowed in reference sections
+- Bold for emphasis: Allowed in lists
 
 **YAML (yamllint):**
 
