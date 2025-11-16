@@ -105,39 +105,29 @@ Each app directory contains:
 
 ### Core Infrastructure
 
-- **MetalLB** (v0.14.9): LoadBalancer for bare-metal
-    - IP Pool: 192.168.87.100-192.168.87.110
-    - Mode: L2 Advertisement
-    - Used by: PiHole DNS service
+- **MetalLB** (v0.14.9): LoadBalancer for bare-metal - IP Pool:
+  192.168.87.100-192.168.87.110, Mode: L2 Advertisement, Used by: PiHole DNS service
 
-- **Sealed Secrets** (v2.16.2): Secret encryption for GitOps
-    - Controller: `kube-system/sealed-secrets-controller`
+- **Sealed Secrets** (v2.16.2): Secret encryption for GitOps - Controller: `kube-system/sealed-secrets-controller`
 
 ### Applications
 
-- **PiHole** (v2.34.0): DNS/ad-blocking
-    - Web UI: `http://pihole.mosher-labs.local`
-    - DNS LoadBalancer IP: `192.168.87.100`
-    - Upstream DNS: Cloudflare (1.1.1.1, 1.0.0.1)
+- **PiHole** (v2.34.0): DNS/ad-blocking - Web UI: `http://pihole.mosher-labs.local`,
+  DNS LoadBalancer IP: `192.168.87.100`, Upstream DNS: Cloudflare (1.1.1.1, 1.0.0.1)
 
-- **Homebridge** (latest): HomeKit bridge
-    - Web UI: `http://homebridge.mosher-labs.local:8581`
-    - Uses plain manifests (no good Helm chart available)
-    - HostNetwork: true (required for mDNS/Bonjour)
-    - Configured plugins: homebridge-ring, homebridge-tplink-smarthome
-    - HomeKit PIN: 764-66-872
+- **Homebridge** (latest): HomeKit bridge - Web UI:
+  `http://homebridge.mosher-labs.local:8581`, Uses plain manifests (no good Helm
+  chart available), HostNetwork: true (required for mDNS/Bonjour), Configured
+  plugins: homebridge-ring, homebridge-tplink-smarthome, HomeKit PIN: 764-66-872
 
-- **Home Assistant** (v0.25.1): Home automation platform
-    - Web UI: `http://home-assistant.mosher-labs.local`
-    - Helm Chart: gabe565/home-assistant
-    - HostNetwork: true (required for local device discovery)
-    - Storage: 20Gi PVC
-    - Integrations: TP-Link Kasa, Ring, Rachio (configured via UI)
-    - Can run Homebridge as add-on
+- **Home Assistant** (v0.25.1): Home automation platform - Web UI:
+  `http://home-assistant.mosher-labs.local`, Helm Chart: gabe565/home-assistant,
+  HostNetwork: true (required for local device discovery), Storage: 20Gi PVC,
+  Integrations: TP-Link Kasa, Ring, Rachio (configured via UI), Can run Homebridge
+  as add-on
 
-- **TP-Link Sync** (custom): Syncs TP-Link device names to Git
-    - CronJob: Periodic sync
-    - Python script with UniFi and GitHub integration
+- **TP-Link Sync** (custom): Syncs TP-Link device names to Git - CronJob: Periodic
+  sync, Python script with UniFi and GitHub integration
 
 ## Smart Home Device Context
 
@@ -195,9 +185,8 @@ Located in garage, requires HomeKit code from physical device for pairing.
 
 - Chamberlain/MyQ actively blocks third-party API access
 - No workaround available
-- **Alternative:** Ratgdo hardware (~$30) with homebridge-ratgdo plugin
-    - Local control bypassing MyQ cloud
-    - Works with Chamberlain/LiftMaster Security+ 2.0
+- **Alternative:** Ratgdo hardware (~$30) with homebridge-ratgdo plugin - Local control
+  bypassing MyQ cloud, Works with Chamberlain/LiftMaster Security+ 2.0
 
 ## Development Tools & Workflows
 
@@ -245,10 +234,9 @@ kubeseal --controller-namespace kube-system \
 
 1. **Create feature branch:** `git checkout -b feature/description`
 1. **Make changes** to code/manifests/docs
-1. **ALWAYS run pre-commit BEFORE committing:**
-    - `pre-commit run --all-files` to check everything
-    - Fix ALL errors (especially markdown formatting)
-    - Do NOT commit with `--no-verify` unless absolutely necessary
+1. **ALWAYS run pre-commit BEFORE committing:** `pre-commit run --all-files` to check
+   everything, Fix ALL errors (especially markdown formatting), Do NOT commit with
+   `--no-verify` unless absolutely necessary
 1. **Commit with conventional format:** `git commit -m "type: description"`
 1. **Push and create PR:** `gh pr create --title "feat: description"`
 1. **Merge to main:** ArgoCD automatically syncs changes
@@ -322,8 +310,7 @@ Example: Sealed secrets deploy before apps that consume them
 ### MetalLB Pool
 
 - **Range:** 192.168.87.100-192.168.87.110
-- **Allocated:**
-    - 192.168.87.100: PiHole DNS service
+- **Allocated:** 192.168.87.100: PiHole DNS service
 
 ### Port Notes
 
@@ -334,8 +321,29 @@ Example: Sealed secrets deploy before apps that consume them
 
 ## Important Notes
 
+### Code Quality Standards
+
+**CRITICAL:** All code must adhere to linter rules from the start. Do NOT write
+code that needs fixing after running pre-commit hooks.
+
+**Markdown (markdownlint):**
+
+- Use 2-space indentation for nested lists under ordered lists
+- Use inline formatting instead of deeply nested lists when possible
+- Keep lines under 120 characters
+- Use consistent list marker styles
+
+**YAML (yamllint):**
+
+- Maximum line length: 80 characters
+- Use 2-space indentation
+- No trailing whitespace
+- Proper quoting for strings containing special characters
+- Use `|-` for multi-line strings when appropriate
+
 ### When Working on This Repo
 
+1. **Write linter-compliant code from the start** - Don't fix after the fact
 1. **ALWAYS use OSS Helm charts** when available (check ArtifactHub)
 1. **Follow the ArgoCD Application pattern** shown in existing apps
 1. **Use sealed-secrets** for any credentials
@@ -361,12 +369,11 @@ Example: Sealed secrets deploy before apps that consume them
 
 ## Related Repositories
 
-- **helm-charts:** <https://github.com/Mosher-Labs/helm-charts>
-    - Custom Helm charts (currently just hello-world template)
+- **helm-charts:** <https://github.com/Mosher-Labs/helm-charts> - Custom Helm charts
+  (currently just hello-world template)
 
-- **ansible-node-setup:** Ansible playbooks for k3s cluster provisioning
-    - Initial cluster setup
-    - Node configuration
+- **ansible-node-setup:** Ansible playbooks for k3s cluster provisioning - Initial
+  cluster setup, Node configuration
 
 ## References
 
