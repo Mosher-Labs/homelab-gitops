@@ -1,0 +1,103 @@
+{
+    "bridge": {
+        "name": "Homebridge 3D65",
+        "username": "0E:4E:74:DB:3D:65",
+        "port": 51390,
+        "pin": "764-66-872",
+        "advertiser": "bonjour-hap"
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "platform": "config"
+        },
+        {
+            "name": "TplinkSmarthome",
+            "addCustomCharacteristics": true,
+            "deviceTypes": [
+                "plug",
+                "bulb"
+            ],
+            "devices": [
+                {
+                    "host": "192.168.3.38"
+                },
+                {
+                    "host": "192.168.3.139"
+                },
+                {
+                    "host": "192.168.3.44"
+                },
+                {
+                    "host": "192.168.3.229"
+                },
+                {
+                    "host": "192.168.3.26"
+                },
+                {
+                    "host": "192.168.3.138"
+                },
+                {
+                    "host": "192.168.3.25"
+                },
+                {
+                    "host": "192.168.3.225"
+                },
+                {
+                    "host": "192.168.3.125"
+                },
+                {
+                    "host": "192.168.3.140"
+                },
+                {
+                    "host": "192.168.3.61"
+                },
+                {
+                    "host": "192.168.3.134"
+                },
+                {
+                    "host": "192.168.3.195"
+                }
+            ],
+            "broadcast": "192.168.3.255",
+            "discoveryOptions": {
+                "broadcast": "192.168.3.255",
+                "discoveryInterval": 10000,
+                "deviceTypes": [
+                    "plug",
+                    "bulb"
+                ]
+            },
+            "debug": true,
+            "platform": "TplinkSmarthome",
+            "_bridge": {
+                "username": "0E:8E:12:B8:32:8C",
+                "port": 50569,
+                "name": "Homebridge TPLink Smarthome"
+            }
+        },
+        {
+            "refreshToken": "REDACTED_FOR_SECURITY",
+            "alarmOnEntryDelay": false,
+            "hideLightGroups": false,
+            "hideDoorbellSwitch": false,
+            "hideCameraLight": false,
+            "hideCameraMotionSensor": false,
+            "hideCameraSirenSwitch": false,
+            "hideInHomeDoorbellSwitch": false,
+            "hideAlarmSirenSwitch": false,
+            "showPanicButtons": false,
+            "avoidSnapshotBatteryDrain": true,
+            "debug": false,
+            "disableLogs": false,
+            "platform": "Ring",
+            "_bridge": {
+                "username": "0E:AB:DD:66:91:59",
+                "port": 35642,
+                "name": "Ring"
+            }
+        }
+    ]
+}
