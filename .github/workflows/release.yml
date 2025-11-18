@@ -6,7 +6,7 @@ on:
 
 jobs:
   release:
-    uses: "Mosher-Labs/.github/.github/workflows/release.yml@main"
+    uses: "Mosher-Labs/.github/.github/workflows/release.yml@v0.10.3"
     permissions:
       contents: write
 
