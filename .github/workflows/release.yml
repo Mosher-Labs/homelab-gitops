@@ -11,4 +11,6 @@ jobs:
     uses: "Mosher-Labs/.github/.github/workflows/release.yml@v0.10.3"
     permissions:
       contents: write
+permissions: read-all
+
 
