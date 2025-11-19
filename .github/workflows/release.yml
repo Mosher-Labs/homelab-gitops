@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - main
+
+permissions: read-all
+
 jobs:
   release:
     uses: "Mosher-Labs/.github/.github/workflows/release.yml@v0.10.3"
@@ -13,6 +16,4 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-permissions: read-all
-
-
+    secrets: inherit
