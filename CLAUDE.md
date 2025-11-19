@@ -239,6 +239,9 @@ kubeseal --controller-namespace kube-system \
    `--no-verify` unless absolutely necessary
 1. **Commit with conventional format:** `git commit -m "type: description"`
 1. **Push and create PR:** `gh pr create --title "feat: description"`
+1. **Test changes:** If your changes reference shared workflows that were also updated,
+   temporarily change the reference from `@main` to `@your-branch` to test, verify
+   the PR passes, then change back to `@main` before merging
 1. **Merge to main:** ArgoCD automatically syncs changes
 
 **Commit Format:** Conventional Commits (enforced by pre-commit hook)
@@ -248,6 +251,7 @@ kubeseal --controller-namespace kube-system \
 - `docs:` - Documentation changes
 - `chore:` - Maintenance
 - `refactor:` - Code refactoring
+- `test:` - Temporary test changes (like branch references)
 
 ### Pre-commit Hooks
 
