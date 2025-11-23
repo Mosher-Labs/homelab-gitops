@@ -68,6 +68,27 @@ spec:
           # Timezone
           timezone: "America/Denver"
 
+          # Monitoring - Prometheus metrics
+          monitoring:
+            # Enable PodMonitor for Prometheus Operator
+            podMonitor:
+              enabled: true
+            # Enable pihole-exporter sidecar
+            sidecar:
+              enabled: true
+              port: 9617
+              image:
+                repository: ekofr/pihole-exporter
+                tag: v1.0.0
+                pullPolicy: IfNotPresent
+              resources:
+                limits:
+                  cpu: 50m
+                  memory: 128Mi
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+
   destination:
     server: https://kubernetes.default.svc
     namespace: pihole
