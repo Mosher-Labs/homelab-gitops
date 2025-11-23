@@ -360,6 +360,29 @@ Configuration: `.markdownlint.yaml` (allows 2-space indent, 120 char lines)
 1. **Create CLAUDE.md** in any new repo or sub-project
 1. **Include CLAUDE.md updates in PRs** when patterns change
 
+### Manifest Files
+
+**IMPORTANT:** When adding plain Kubernetes manifests to `apps/*/manifests/`,
+create **separate files for each resource type** due to pre-commit check-yaml rules.
+
+**Pattern:**
+
+- ❌ **Bad:** `deployment-and-service.yaml` (multi-document YAML)
+- ✅ **Good:** `deployment.yaml` + `service.yaml` (separate files)
+
+**Reasoning:** The `check-yaml` hook expects single-document YAML files.
+While Kubernetes allows `---` separators, the linter requires separate files.
+
+**Example:**
+
+```
+apps/pihole/manifests/
+├── sealed-secret.yaml           # One SealedSecret
+├── pihole-exporter-deployment.yaml    # One Deployment
+├── pihole-exporter-service.yaml       # One Service
+└── pihole-exporter-servicemonitor.yaml # One ServiceMonitor
+```
+
 ### Common Pitfalls
 
 - **Don't use plain manifests** if a Helm chart exists
@@ -367,6 +390,7 @@ Configuration: `.markdownlint.yaml` (allows 2-space indent, 120 char lines)
 - **Don't skip pre-commit hooks** - they catch formatting issues
 - **Remember hostNetwork: true** for apps needing mDNS (Homebridge, HA)
 - **Check sync waves** for dependency ordering
+- **Don't combine multiple resources in one YAML** - use separate files
 
 ### Home Assistant Migration Notes
 
