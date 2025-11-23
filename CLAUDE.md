@@ -113,7 +113,7 @@ Each app directory contains:
 ### Applications
 
 - **PiHole** (v2.34.0): DNS/ad-blocking - Web UI: `http://pihole.mosher-labs.local`,
-  DNS LoadBalancer IP: `192.168.87.100`, Upstream DNS: Cloudflare (1.1.1.1, 1.0.0.1)
+  DNS LoadBalancer IP: `192.168.87.101`, Upstream DNS: Cloudflare (1.1.1.1, 1.0.0.1)
 
 - **Homebridge** (latest): HomeKit bridge - Web UI:
   `http://homebridge.mosher-labs.local:8581`, Uses plain manifests (no good Helm
@@ -308,13 +308,13 @@ Example: Sealed secrets deploy before apps that consume them
 ### Local Network
 
 - **Range:** 192.168.3.0/24
-- **DNS:** PiHole at 192.168.87.100
+- **DNS:** PiHole at 192.168.87.101
 - **Ingress Domain:** *.mosher-labs.local (Traefik)
 
 ### MetalLB Pool
 
 - **Range:** 192.168.87.100-192.168.87.110
-- **Allocated:** 192.168.87.100: PiHole DNS service
+- **Allocated:** 192.168.87.100 (Traefik ingress), 192.168.87.101 (PiHole DNS)
 
 ### Port Notes
 

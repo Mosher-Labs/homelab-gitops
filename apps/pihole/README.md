@@ -10,7 +10,7 @@ on the network. Deployed via the mojo2600/pihole-kubernetes Helm chart.
 ## Access
 
 - **Web UI:** `http://pihole.mosher-labs.local`
-- **DNS Service:** `192.168.87.100` (MetalLB LoadBalancer)
+- **DNS Service:** `192.168.87.101` (MetalLB LoadBalancer)
 - **Admin Password:** Stored in sealed secret
 
 ## Configuration
@@ -106,7 +106,7 @@ kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:909
 ### DNS Not Working
 
 1. Verify LoadBalancer IP is assigned: `kubectl get svc -n pihole`
-1. Check DNS can be queried: `dig @192.168.87.100 google.com`
+1. Check DNS can be queried: `dig @192.168.87.101 google.com`
 1. Verify upstream DNS is reachable from pod
 1. Check PiHole logs for errors
 
