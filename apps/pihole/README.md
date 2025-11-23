@@ -23,11 +23,13 @@ on the network. Deployed via the mojo2600/pihole-kubernetes Helm chart.
 
 ### Monitoring
 
-PiHole exports metrics to Prometheus via the `pihole-exporter` sidecar:
+PiHole exports metrics to Prometheus via a **separate deployment** of
+`pihole-exporter` (not a sidecar to avoid circular dependencies):
 
-- **Exporter:** ekofr/pihole-exporter v1.0.0
+- **Exporter:** ekofr/pihole-exporter:latest
 - **Metrics Port:** 9617
-- **PodMonitor:** Enabled (automatic scraping by Prometheus)
+- **ServiceMonitor:** Enabled (automatic scraping by Prometheus)
+- **Deployment:** Separate pod that connects to PiHole web API
 
 **Available Metrics:**
 

@@ -1,0 +1,60 @@
+---
+# Deployment for PiHole Prometheus Exporter
+# Runs as separate deployment to avoid circular dependency with PiHole pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole-exporter
+  namespace: pihole
+  labels:
+    app: pihole-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pihole-exporter
+  template:
+    metadata:
+      labels:
+        app: pihole-exporter
+    spec:
+      containers:
+        - name: pihole-exporter
+          image: ekofr/pihole-exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9617
+              protocol: TCP
+          env:
+            - name: PIHOLE_HOSTNAME
+              value: "pihole-web.pihole.svc.cluster.local"
+            - name: PIHOLE_PORT
+              value: "80"
+            - name: PIHOLE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pihole-password
+                  key: password
+            - name: INTERVAL
+              value: "30s"
+            - name: PORT
+              value: "9617"
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10

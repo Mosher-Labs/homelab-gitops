@@ -1,0 +1,17 @@
+---
+# ServiceMonitor for Prometheus Operator
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pihole-exporter
+  namespace: pihole
+  labels:
+    app: pihole-exporter
+spec:
+  selector:
+    matchLabels:
+      app: pihole-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

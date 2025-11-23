@@ -1,0 +1,65 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tplink-sync
+  namespace: tplink-sync
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          hostNetwork: true  # Need access to IoT network
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+            - name: tplink-sync
+              image: ghcr.io/mosher-labs/tplink-sync:latest
+              imagePullPolicy: Always
+              env:
+                - name: UNIFI_HOST
+                  value: "https://192.168.202.1:8443"
+                - name: UNIFI_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: tplink-sync-secrets
+                      key: unifi-username
+                - name: UNIFI_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: tplink-sync-secrets
+                      key: unifi-password
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: tplink-sync-secrets
+                      key: github-token
+                - name: GITHUB_REPOSITORY
+                  value: "Mosher-Labs/homelab-gitops"
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: tplink-sync-secrets
+                      key: slack-webhook-url
+                - name: HOMEBRIDGE_CONFIG
+                  value: "/repo/apps/homebridge/config.json"
+              volumeMounts:
+                - name: repo
+                  mountPath: /repo
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  cd /repo
+                  REPO_URL="https://x-access-token:${GITHUB_TOKEN}"
+                  REPO_URL="${REPO_URL}@github.com/${GITHUB_REPOSITORY}.git"
+                  git clone "${REPO_URL}" .
+                  python /app/sync-tplink-devices.py
+          volumes:
+            - name: repo
+              emptyDir: {}
