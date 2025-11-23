@@ -1,0 +1,79 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+  labels:
+    app: renovate
+spec:
+  # Run every 5 minutes
+  schedule: "*/5 * * * *"
+  # Suspend to allow manual execution during testing
+  suspend: false
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: renovate
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: renovate
+              image: renovate/renovate:latest
+              env:
+                # Platform
+                - name: RENOVATE_PLATFORM
+                  value: "github"
+                - name: RENOVATE_ENDPOINT
+                  value: "https://api.github.com"
+                # GitHub App authentication
+                - name: RENOVATE_GIT_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: app-id
+                - name: RENOVATE_GIT_APP_INSTALLATION_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: installation-id
+                - name: RENOVATE_PRIVATE_KEY_PATH
+                  value: "/secrets/private-key"
+                # Git author
+                - name: RENOVATE_GIT_AUTHOR
+                  value: "Renovate Bot <bot@renovateapp.com>"
+                # Log level and debugging
+                - name: LOG_LEVEL
+                  value: "info"
+                - name: RENOVATE_ONBOARDING
+                  value: "false"
+                - name: RENOVATE_REQUIRE_CONFIG
+                  value: "optional"
+                # Config file
+                - name: RENOVATE_CONFIG_FILE
+                  value: "/config/config.json"
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                - name: github-app-key
+                  mountPath: /secrets
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+          volumes:
+            - name: config
+              configMap:
+                name: renovate-config
+            - name: github-app-key
+              secret:
+                secretName: renovate-github-app

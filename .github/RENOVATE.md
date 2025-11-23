@@ -3,6 +3,11 @@
 This repository uses [Renovate](https://docs.renovatebot.com/) for automated
 dependency updates.
 
+**Note:** This repository uses **self-hosted Renovate** deployed as a
+Kubernetes CronJob. See
+[infrastructure/renovate/README.md](../infrastructure/renovate/README.md) for
+deployment and setup instructions.
+
 ## What Gets Updated
 
 Renovate monitors and updates:
