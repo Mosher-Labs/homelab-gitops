@@ -69,13 +69,15 @@ spec:
           timezone: "America/Denver"
 
           # Monitoring - Prometheus metrics
+          # NOTE: Sidecar disabled due to circular dependency (can't pull
+          # image when PiHole/DNS is down). Using separate deployment instead.
           monitoring:
-            # Enable PodMonitor for Prometheus Operator
+            # PodMonitor for separate deployment (not sidecar)
             podMonitor:
-              enabled: true
-            # Enable pihole-exporter sidecar
+              enabled: false
+            # Disable sidecar (use separate deployment)
             sidecar:
-              enabled: true
+              enabled: false
               port: 9617
               image:
                 repository: ekofr/pihole-exporter
