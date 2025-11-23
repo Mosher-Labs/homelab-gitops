@@ -17,8 +17,6 @@
   "commitMessageAction": "update",
   "commitMessageExtra": "to {{newValue}}",
   "commitMessageTopic": "{{depName}}",
-  "prConcurrentLimit": 5,
-  "prHourlyLimit": 2,
   "automerge": false,
   "platformAutomerge": false,
   "rebaseWhen": "behind-base-branch",
@@ -85,6 +83,27 @@
       ],
       "groupName": "docker images",
       "automerge": false
+    },
+    {
+      "description": "Pre-commit hooks - major/minor only (skip patches)",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "groupName": "pre-commit hooks"
+    },
+    {
+      "description": "Pre-commit hooks - ignore patch updates",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "enabled": false
     },
     {
       "description": "Critical security updates",

@@ -20,8 +20,8 @@ See `renovate.json` in the repository root for the complete configuration.
 
 - **Schedule:** Runs after 10pm weekdays and all weekend
 - **Timezone:** America/Denver
-- **Auto-merge:** GitHub Actions (patch/minor only)
-- **PR Limits:** Max 5 concurrent, 2 per hour
+- **Auto-merge:** GitHub Actions (patch/minor only), Security patches
+- **PR Limits:** None (creates all PRs as needed)
 - **Semantic Commits:** Enabled with `chore(deps):` prefix
 
 ### Package Rules
@@ -38,6 +38,11 @@ See `renovate.json` in the repository root for the complete configuration.
 1. **Docker Images:**
    - Grouped by update type
    - No auto-merge
+
+1. **Pre-commit Hooks:**
+   - Major/minor updates only
+   - Patch updates ignored (reduces noise from frequent Checkov updates)
+   - Grouped together
 
 1. **Security Patches:**
    - Auto-merged if not v0.x.x
@@ -77,11 +82,20 @@ Find it in Issues with title: **🤖 Renovate Dependency Dashboard**
 
 ## Manual Trigger
 
-To manually trigger Renovate:
+To manually trigger Renovate outside the schedule:
+
+### Trigger All Updates
 
 1. Go to the Dependency Dashboard issue
-1. Check the box for the dependency you want to update
-1. Renovate will create a PR immediately
+1. Check the box: **"Check this box to trigger a request for Renovate to run"**
+1. Renovate will scan all dependencies and create PRs immediately
+1. **Use this after initial installation** to bring all dependencies up to date
+
+### Trigger Specific Dependency
+
+1. Go to the Dependency Dashboard issue
+1. Check the box for the specific dependency you want to update
+1. Renovate will create a PR for just that dependency
 
 ## PR Workflow
 
@@ -115,14 +129,16 @@ To ignore a specific dependency, add to `renovate.json`:
 
 ### Too Many PRs
 
-Adjust limits in `renovate.json`:
+If you need to limit PR creation, add to `renovate.json`:
 
 ```json
 {
-  "prConcurrentLimit": 3,
-  "prHourlyLimit": 1
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2
 }
 ```
+
+Currently, no limits are set to allow all necessary PRs to be created.
 
 ### Failed Updates
 
