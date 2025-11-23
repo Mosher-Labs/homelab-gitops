@@ -34,6 +34,12 @@ argo-cd:
     replicas: 3
     service:
       type: ClusterIP
+    # Metrics for Prometheus
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
     # Ingress configuration for home network access
     ingress:
       enabled: true
@@ -74,6 +80,12 @@ argo-cd:
   # HA: Application Controller with leader election
   controller:
     replicas: 3
+    # Metrics for Prometheus
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
     resources:
       limits:
         cpu: 500m
@@ -97,6 +109,12 @@ argo-cd:
   repoServer:
     # HA: 3 replicas for Git operations
     replicas: 3
+    # Metrics for Prometheus
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
     resources:
       limits:
         cpu: 200m
@@ -120,6 +138,12 @@ argo-cd:
   # HA: ApplicationSet Controller
   applicationSet:
     replicas: 3
+    # Metrics for Prometheus
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
     resources:
       limits:
         cpu: 100m
