@@ -72,14 +72,14 @@ spec:
           monitoring:
             # Enable PodMonitor for Prometheus Operator
             podMonitor:
-              enabled: true
+              enabled: false
             # Enable pihole-exporter sidecar
             sidecar:
-              enabled: true
+              enabled: false
               port: 9617
               image:
                 repository: ekofr/pihole-exporter
-                tag: v1.0.0
+                tag: latest
                 pullPolicy: IfNotPresent
               resources:
                 limits:
