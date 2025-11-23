@@ -69,13 +69,16 @@ spec:
           timezone: "America/Denver"
 
           # Monitoring - Prometheus metrics
+          # NOTE: Exporter disabled as sidecar due to circular dependency:
+          # PiHole can't start -> can't pull exporter image -> DNS down
+          # Solution: Deploy pihole-exporter as separate deployment
           monitoring:
             # Enable PodMonitor for Prometheus Operator
             podMonitor:
-              enabled: true
-            # Enable pihole-exporter sidecar
+              enabled: false
+            # Disable pihole-exporter sidecar (use separate deployment)
             sidecar:
-              enabled: true
+              enabled: false
               port: 9617
               image:
                 repository: ekofr/pihole-exporter
