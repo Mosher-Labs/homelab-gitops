@@ -1,0 +1,158 @@
+---
+# ArgoCD Application for kube-prometheus-stack
+# Complete monitoring stack: Prometheus + Grafana + AlertManager
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  # Finalizer ensures cascade delete of deployed resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project: grouping/permission boundary
+  project: default
+
+  # SOURCE: Where is the Helm chart?
+  source:
+    # Prometheus Community Helm repo
+    repoURL: https://prometheus-community.github.io/helm-charts
+    # Which chart to use
+    chart: kube-prometheus-stack
+    targetRevision: 79.7.1
+    # Helm values
+    helm:
+      valuesObject:
+        # Prometheus Operator Configuration
+        prometheusOperator:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+        # Prometheus Server Configuration
+        prometheus:
+          prometheusSpec:
+            # Data retention
+            retention: 14d
+            retentionSize: "10GB"
+            # Storage
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 15Gi
+            # Resource limits
+            resources:
+              limits:
+                cpu: 500m
+                memory: 1Gi
+              requests:
+                cpu: 200m
+                memory: 512Mi
+            # Service monitors
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+
+        # Grafana Configuration
+        grafana:
+          # Admin credentials (change after first login!)
+          adminPassword: admin
+          # Ingress for Grafana UI
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - grafana.mosher-labs.local
+          # Resource limits
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          # Persistence
+          persistence:
+            enabled: true
+            size: 5Gi
+          # Grafana configuration
+          grafana.ini:
+            server:
+              root_url: http://grafana.mosher-labs.local
+            analytics:
+              check_for_updates: false
+              reporting_enabled: false
+
+        # AlertManager Configuration
+        alertmanager:
+          alertmanagerSpec:
+            # Resource limits
+            resources:
+              limits:
+                cpu: 100m
+                memory: 128Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
+            # Storage
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 2Gi
+
+        # Disable k3s-incompatible components
+        # k3s doesn't expose these as separate pods
+        kubeEtcd:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+
+        # Node exporter - collects node metrics
+        nodeExporter:
+          enabled: true
+
+        # Kube-state-metrics - collects K8s object metrics
+        kube-state-metrics:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+
+  # DESTINATION: Where should it be deployed?
+  destination:
+    # Kubernetes cluster (in-cluster API)
+    server: https://kubernetes.default.svc
+    # Target namespace
+    namespace: monitoring
+
+  # SYNC POLICY: How should ArgoCD keep things in sync?
+  syncPolicy:
+    # Automated sync: auto-deploy on Git push
+    automated:
+      prune: true
+      selfHeal: true
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    # Retry policy if sync fails
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
