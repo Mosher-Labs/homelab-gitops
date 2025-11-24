@@ -48,15 +48,17 @@ spec:
           containers:
             - name: renovate
               image: renovate/renovate:latest
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  export RENOVATE_TOKEN=$(cat /token/github-token)
+                  exec renovate
               env:
                 # Platform
                 - name: RENOVATE_PLATFORM
                   value: "github"
                 - name: RENOVATE_ENDPOINT
                   value: "https://api.github.com"
-                # GitHub token (generated from GitHub App)
-                - name: RENOVATE_TOKEN
-                  value: "file:/token/github-token"
                 # Git author
                 - name: RENOVATE_GIT_AUTHOR
                   value: "EikthyrnirBot <bot@renovateapp.com>"
