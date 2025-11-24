@@ -22,6 +22,29 @@ spec:
             app: renovate
         spec:
           restartPolicy: Never
+          initContainers:
+            - name: token-generator
+              image: alpine:3.19
+              command: ["/bin/sh", "/scripts/generate-token.sh"]
+              env:
+                - name: GITHUB_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: app-id
+                - name: GITHUB_INSTALLATION_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: installation-id
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                - name: github-app-secret
+                  mountPath: /secrets
+                  readOnly: true
+                - name: token
+                  mountPath: /token
           containers:
             - name: renovate
               image: renovate/renovate:latest
@@ -31,25 +54,12 @@ spec:
                   value: "github"
                 - name: RENOVATE_ENDPOINT
                   value: "https://api.github.com"
-                # GitHub App authentication
-                - name: RENOVATE_GIT_APP_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: renovate-github-app
-                      key: app-id
-                - name: RENOVATE_GIT_APP_INSTALLATION_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: renovate-github-app
-                      key: installation-id
-                - name: RENOVATE_PRIVATE_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: renovate-github-app
-                      key: private-key
+                # GitHub token (generated from GitHub App)
+                - name: RENOVATE_TOKEN
+                  value: "file:/token/github-token"
                 # Git author
                 - name: RENOVATE_GIT_AUTHOR
-                  value: "Renovate Bot <bot@renovateapp.com>"
+                  value: "EikthyrnirBot <bot@renovateapp.com>"
                 # Log level and debugging
                 - name: LOG_LEVEL
                   value: "info"
@@ -63,6 +73,9 @@ spec:
               volumeMounts:
                 - name: config
                   mountPath: /config
+                - name: token
+                  mountPath: /token
+                  readOnly: true
               resources:
                 requests:
                   cpu: 100m
@@ -74,3 +87,12 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
+            - name: scripts
+              configMap:
+                name: renovate-token-generator
+                defaultMode: 0755
+            - name: github-app-secret
+              secret:
+                secretName: renovate-github-app
+            - name: token
+              emptyDir: {}

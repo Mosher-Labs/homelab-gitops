@@ -14,7 +14,7 @@ data:
         ":gitSignOff"
       ],
       "platform": "github",
-      "gitAuthor": "Renovate Bot <bot@renovateapp.com>",
+      "gitAuthor": "EikthyrnirBot <bot@renovateapp.com>",
       "autodiscover": true,
       "autodiscoverFilter": ["Mosher-Labs/*"],
       "timezone": "America/Denver",
