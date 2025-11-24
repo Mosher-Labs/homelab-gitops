@@ -9,6 +9,9 @@ data:
     #!/bin/sh
     set -e
 
+    # Install required packages
+    apk add --no-cache openssl
+
     echo "Generating GitHub App installation token..."
 
     # Read credentials from environment
