@@ -73,14 +73,11 @@ data:
           ]
         },
         {
-          "description": "GitHub Actions - automerge patch/minor",
+          "description": "GitHub Actions - group all updates",
           "matchManagers": [
             "github-actions"
           ],
-          "matchUpdateTypes": [
-            "minor",
-            "patch"
-          ],
+          "groupName": "GitHub Actions",
           "automerge": true,
           "automergeType": "pr"
         },
