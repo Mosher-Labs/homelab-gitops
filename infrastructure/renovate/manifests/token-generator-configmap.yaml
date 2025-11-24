@@ -60,7 +60,9 @@ data:
       "${token_url}" \
       --post-data='{}')
 
-    token=$(echo "$response" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+    token=$(echo "$response" | \
+      grep -o '"token"[[:space:]]*:[[:space:]]*"[^"]*' | \
+      sed 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
     if [ -z "$token" ]; then
       echo "ERROR: Failed to get installation token"
