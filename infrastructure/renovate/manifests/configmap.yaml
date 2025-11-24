@@ -123,6 +123,17 @@ data:
             "security",
             "automerge"
           ]
+        },
+        {
+          "description": "Ruby gems - group non-security updates",
+          "matchManagers": [
+            "bundler"
+          ],
+          "matchUpdateTypes": [
+            "minor",
+            "patch"
+          ],
+          "groupName": "Ruby dependencies"
         }
       ],
       "customManagers": [
