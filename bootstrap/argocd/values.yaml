@@ -64,11 +64,11 @@ argo-cd:
       requests:
         cpu: 100m
         memory: 128Mi
-    # HA: Topology spread - ensure one pod per node
+    # HA: Topology spread - prefer one pod per node (resilient to node failures)
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: argocd-server
@@ -93,11 +93,11 @@ argo-cd:
       requests:
         cpu: 250m
         memory: 256Mi
-    # HA: Topology spread - ensure one pod per node
+    # HA: Topology spread - prefer one pod per node (resilient to node failures)
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: argocd-repo-server
@@ -122,11 +122,11 @@ argo-cd:
       requests:
         cpu: 100m
         memory: 128Mi
-    # HA: Topology spread - ensure one pod per node
+    # HA: Topology spread - prefer one pod per node (resilient to node failures)
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: argocd-repo-server
@@ -151,11 +151,11 @@ argo-cd:
       requests:
         cpu: 50m
         memory: 64Mi
-    # HA: Topology spread
+    # HA: Topology spread - prefer one pod per node (resilient to node failures)
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: argocd-applicationset-controller
