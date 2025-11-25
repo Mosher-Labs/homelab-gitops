@@ -1,0 +1,143 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: node-monitoring-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: node.rules
+      interval: 30s
+      rules:
+        # Node is NotReady for more than 1 minute
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: node
+          annotations:
+            summary: "Node {{ $labels.node }} is not ready"
+            description: |
+              Node {{ $labels.node }} has been in NotReady state
+              for more than 1 minute. This may cause pod scheduling
+              failures and service disruptions.
+
+        # Node has memory pressure
+        - alert: NodeMemoryPressure
+          expr: |
+            kube_node_status_condition{condition="MemoryPressure",
+              status="true"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Node {{ $labels.node }} has memory pressure"
+            description: |
+              Node {{ $labels.node }} is experiencing memory pressure.
+              Pods may be evicted if memory usage continues to
+              increase.
+
+        # Node has disk pressure
+        - alert: NodeDiskPressure
+          expr: |
+            kube_node_status_condition{condition="DiskPressure",
+              status="true"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Node {{ $labels.node }} has disk pressure"
+            description: |
+              Node {{ $labels.node }} is experiencing disk pressure.
+              Pods may be evicted if disk usage continues to
+              increase.
+
+        # Node has PID pressure
+        - alert: NodePIDPressure
+          expr: |
+            kube_node_status_condition{condition="PIDPressure",
+              status="true"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Node {{ $labels.node }} has PID pressure"
+            description: |
+              Node {{ $labels.node }} is experiencing PID pressure.
+              Too many processes are running on this node.
+
+        # Node is unreachable
+        - alert: NodeUnreachable
+          expr: |
+            kube_node_spec_taint{effect="NoSchedule",
+              key="node.kubernetes.io/unreachable"} == 1
+          for: 1m
+          labels:
+            severity: critical
+            component: node
+          annotations:
+            summary: "Node {{ $labels.node }} is unreachable"
+            description: |
+              Node {{ $labels.node }} is marked as unreachable
+              by the cluster. Pods on this node cannot be managed
+              and may be terminated.
+
+        # High CPU usage on node
+        - alert: NodeHighCPUUsage
+          expr: |
+            (1 - avg by (instance)
+              (rate(node_cpu_seconds_total{mode="idle"}[5m])))
+              * 100 > 80
+          for: 10m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Node {{ $labels.instance }} has high CPU usage"
+            description: |
+              Node {{ $labels.instance }} has CPU usage above 80%
+              for more than 10 minutes.
+              Current usage: {{ $value | humanizePercentage }}
+
+        # High memory usage on node
+        - alert: NodeHighMemoryUsage
+          expr: |
+            (1 - (node_memory_MemAvailable_bytes /
+              node_memory_MemTotal_bytes)) * 100 > 80
+          for: 10m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Node {{ $labels.instance }} has high memory usage"
+            description: |
+              Node {{ $labels.instance }} has memory usage above 80%
+              for more than 10 minutes.
+              Current usage: {{ $value | humanizePercentage }}
+
+        # Filesystem usage high
+        - alert: NodeFilesystemAlmostFull
+          expr: |
+            (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} /
+              node_filesystem_size_bytes{fstype!="tmpfs"}))
+              * 100 > 85
+          for: 10m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: >-
+              Filesystem {{ $labels.mountpoint }} on
+              {{ $labels.instance }} is almost full
+            description: |
+              Filesystem {{ $labels.mountpoint }} on node
+              {{ $labels.instance }} is
+              {{ $value | humanizePercentage }} full.
+              Please free up space or expand the volume.

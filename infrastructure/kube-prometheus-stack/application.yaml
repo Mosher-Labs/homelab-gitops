@@ -13,16 +13,19 @@ spec:
   # Project: grouping/permission boundary
   project: default
 
-  # SOURCE: Where is the Helm chart?
-  source:
-    # Prometheus Community Helm repo
-    repoURL: https://prometheus-community.github.io/helm-charts
-    # Which chart to use
-    chart: kube-prometheus-stack
-    targetRevision: 79.7.1
-    # Helm values
-    helm:
-      valuesObject:
+  # SOURCES: Multiple sources for Helm chart + manifests
+  sources:
+    # Custom manifests (sealed secrets, PrometheusRules)
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: infrastructure/kube-prometheus-stack/manifests
+
+    # Helm chart source
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 79.7.1
+      helm:
+        valuesObject:
         # Prometheus Operator Configuration
         prometheusOperator:
           resources:
@@ -91,7 +94,45 @@ spec:
 
         # AlertManager Configuration
         alertmanager:
+          # AlertManager configuration via secret
+          config:
+            global:
+              resolve_timeout: 5m
+              slack_api_url_file: /etc/alertmanager/secrets/slack-webhook/url
+            route:
+              group_by: ['alertname', 'cluster', 'service']
+              group_wait: 10s
+              group_interval: 10s
+              repeat_interval: 12h
+              receiver: 'slack-notifications'
+              routes:
+                - match:
+                    alertname: Watchdog
+                  receiver: 'null'
+                - match:
+                    severity: critical
+                  receiver: 'slack-notifications'
+                  continue: true
+            receivers:
+              - name: 'null'
+              - name: 'slack-notifications'
+                slack_configs:
+                  - channel: '#homelab-alerts'
+                    title: 'Homelab Alert: {{ .GroupLabels.alertname }}'
+                    text: >-
+                      {{ range .Alerts }}
+                        *Alert:* {{ .Labels.alertname }}
+                        *Severity:* {{ .Labels.severity }}
+                        *Summary:* {{ .Annotations.summary }}
+                        *Description:* {{ .Annotations.description }}
+                        *Node:* {{ .Labels.node }}
+                      {{ end }}
+                    send_resolved: true
+
           alertmanagerSpec:
+            # Mount slack webhook secret
+            secrets:
+              - slack-webhook
             # Resource limits
             resources:
               limits:
