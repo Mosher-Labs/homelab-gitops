@@ -77,9 +77,9 @@ argo-cd:
       enabled: true
       minAvailable: 2
 
-  # HA: Application Controller with leader election
+  # Application Controller - single replica due to memory constraints
   controller:
-    replicas: 3
+    replicas: 1
     # Metrics for Prometheus
     metrics:
       enabled: true
@@ -88,8 +88,8 @@ argo-cd:
         interval: 30s
     resources:
       limits:
-        cpu: 1000m
-        memory: 1Gi
+        cpu: 2000m
+        memory: 2Gi
       requests:
         cpu: 250m
         memory: 256Mi
