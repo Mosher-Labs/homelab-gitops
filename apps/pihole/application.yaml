@@ -55,12 +55,13 @@ spec:
               cpu: 100m
               memory: 128Mi
 
-          # Persistence for blocklists and config
+          # HA: 3 replicas for high availability
+          replicaCount: 3
+
+          # Persistence disabled for stateless HA setup
+          # Configuration is managed via Helm values (GitOps)
           persistentVolumeClaim:
-            enabled: true
-            accessModes:
-              - ReadWriteOnce
-            size: 1Gi
+            enabled: false
 
           # DNS settings
           DNS1: "1.1.1.1"  # Cloudflare upstream
@@ -71,6 +72,32 @@ spec:
 
           # Timezone
           timezone: "America/Denver"
+
+          # HA: Topology spread constraints for even distribution
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app: pihole
+                  release: pihole
+
+          # HA: Pod Disruption Budget - maintain at least 2 pods
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 2
+
+          # HA: Anti-affinity to prefer different nodes
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app: pihole
+                    topologyKey: kubernetes.io/hostname
 
           # Monitoring - Prometheus metrics
           # NOTE: Sidecar disabled due to circular dependency (can't pull
