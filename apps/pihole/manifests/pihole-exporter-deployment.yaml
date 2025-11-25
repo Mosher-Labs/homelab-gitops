@@ -9,7 +9,8 @@ metadata:
   labels:
     app: pihole-exporter
 spec:
-  replicas: 1
+  # HA: 3 replicas for high availability
+  replicas: 3
   selector:
     matchLabels:
       app: pihole-exporter
@@ -18,6 +19,24 @@ spec:
       labels:
         app: pihole-exporter
     spec:
+      # HA: Topology spread for even distribution across nodes
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: pihole-exporter
+      # HA: Prefer different nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: pihole-exporter
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: pihole-exporter
           image: ekofr/pihole-exporter:latest
