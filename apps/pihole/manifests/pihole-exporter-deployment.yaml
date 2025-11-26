@@ -44,6 +44,9 @@ spec:
             - name: metrics
               containerPort: 9617
               protocol: TCP
+          command:
+            - "python3"
+            - "/usr/local/bin/pihole6_exporter"
           args:
             - "-H"
             - "pihole-web.pihole.svc.cluster.local"
