@@ -55,8 +55,8 @@ spec:
               cpu: 100m
               memory: 128Mi
 
-          # HA: 3 replicas for high availability
-          replicaCount: 3
+          # HA: 2 replicas for 2-node cluster
+          replicaCount: 2
 
           # Persistence disabled for stateless HA setup
           # Configuration is managed via Helm values (GitOps)
@@ -83,10 +83,10 @@ spec:
                   app: pihole
                   release: pihole
 
-          # HA: Pod Disruption Budget - maintain at least 2 pods
+          # HA: Pod Disruption Budget - maintain at least 1 pod
           podDisruptionBudget:
             enabled: true
-            minAvailable: 2
+            minAvailable: 1
 
           # HA: Anti-affinity to prefer different nodes
           affinity:
