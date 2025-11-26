@@ -1,6 +1,6 @@
 ---
 # ArgoCD Helm Chart Values - HA Configuration
-# 3-replica setup for full redundancy across 3-node cluster
+# 2-replica setup for redundancy across 2-node cluster
 # Values must be nested under 'argo-cd' for dependency chart
 
 argo-cd:
@@ -16,7 +16,7 @@ argo-cd:
     enabled: true
     haproxy:
       enabled: true
-      replicas: 3
+      replicas: 2
       resources:
         limits:
           cpu: 100m
@@ -30,8 +30,8 @@ argo-cd:
     enabled: false
 
   server:
-    # HA: 3 replicas - one per node
-    replicas: 3
+    # HA: 2 replicas - one per node
+    replicas: 2
     service:
       type: ClusterIP
     # Metrics for Prometheus
@@ -75,7 +75,7 @@ argo-cd:
     # HA: Pod Disruption Budget
     pdb:
       enabled: true
-      minAvailable: 2
+      minAvailable: 1
 
   # Application Controller - single replica due to memory constraints
   controller:
@@ -101,14 +101,13 @@ argo-cd:
         labelSelector:
           matchLabels:
             app.kubernetes.io/name: argocd-repo-server
-    # HA: Pod Disruption Budget
+    # HA: Pod Disruption Budget (disabled for single replica)
     pdb:
-      enabled: true
-      minAvailable: 2
+      enabled: false
 
   repoServer:
-    # HA: 3 replicas for Git operations
-    replicas: 3
+    # HA: 2 replicas for Git operations
+    replicas: 2
     # Metrics for Prometheus
     metrics:
       enabled: true
@@ -133,11 +132,11 @@ argo-cd:
     # HA: Pod Disruption Budget
     pdb:
       enabled: true
-      minAvailable: 2
+      minAvailable: 1
 
   # HA: ApplicationSet Controller
   applicationSet:
-    replicas: 3
+    replicas: 2
     # Metrics for Prometheus
     metrics:
       enabled: true
@@ -162,7 +161,7 @@ argo-cd:
     # HA: Pod Disruption Budget
     pdb:
       enabled: true
-      minAvailable: 2
+      minAvailable: 1
 
   # Dex: Single replica (no HA support), but PDB for faster rescheduling
   dex:
