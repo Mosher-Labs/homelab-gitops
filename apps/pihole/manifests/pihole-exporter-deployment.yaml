@@ -9,8 +9,8 @@ metadata:
   labels:
     app: pihole-exporter
 spec:
-  # HA: 3 replicas for high availability
-  replicas: 3
+  # HA: 2 replicas for 2-node cluster
+  replicas: 2
   selector:
     matchLabels:
       app: pihole-exporter
