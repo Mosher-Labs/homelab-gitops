@@ -12,7 +12,7 @@ spec:
     # MetalLB configuration manifests
     - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
       targetRevision: main
-      path: apps/metallb/manifests
+      path: infrastructure/metallb/manifests
     # MetalLB Helm chart
     - repoURL: https://metallb.github.io/metallb
       chart: metallb
