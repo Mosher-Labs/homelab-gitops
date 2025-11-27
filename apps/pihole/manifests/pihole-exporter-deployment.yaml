@@ -9,8 +9,8 @@ metadata:
   labels:
     app: pihole-exporter
 spec:
-  # HA: 2 replicas for 2-node cluster
-  replicas: 2
+  # Single replica due to PiHole v6 API session limits
+  replicas: 1
   selector:
     matchLabels:
       app: pihole-exporter
