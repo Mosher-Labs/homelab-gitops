@@ -1,11 +1,11 @@
 # Self-Hosted Renovate
 
 Self-hosted Renovate running as a Kubernetes CronJob for automated dependency
-updates across the Mosher-Labs organization.
+updates across multiple GitHub organizations.
 
 ## Overview
 
-- **Deployment:** CronJob (runs every 5 minutes)
+- **Deployment:** CronJob (runs daily at 2am)
 - **Authentication:** GitHub App
 - **Repositories:** Autodiscover repos with `renovate.json` in Mosher-Labs and
   acebackapp orgs
@@ -20,22 +20,20 @@ Follow the detailed guide in
 
 1. Create a GitHub App in the Mosher-Labs organization
 1. Generate a private key
-1. Install the app on repositories
-1. Note the App ID and Installation ID
+1. Install the app on each organization (Mosher-Labs, acebackapp, etc.)
+1. Note the App ID (installation IDs are not needed with native GitHub App auth)
 
 ### 2. Create Sealed Secret
 
 ```bash
 # Replace with your actual values
 APP_ID="your-app-id"
-INSTALLATION_ID="your-installation-id"
 PRIVATE_KEY="$(cat path/to/your-app.pem)"
 
 # Create the sealed secret
 kubectl create secret generic renovate-github-app \
   --namespace renovate \
   --from-literal=app-id="$APP_ID" \
-  --from-literal=installation-id="$INSTALLATION_ID" \
   --from-literal=private-key="$PRIVATE_KEY" \
   --dry-run=client -o yaml | \
 kubeseal --controller-namespace kube-system \
@@ -76,20 +74,20 @@ kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l app=renovate --tail=100 -f
 
 ### Schedule
 
-The CronJob runs **every 5 minutes** (`*/5 * * * *`).
+The CronJob runs **daily at 2am** (`0 2 * * *`).
 
 To change the schedule, edit
 [manifests/cronjob.yaml](manifests/cronjob.yaml):
 
 ```yaml
 spec:
-  schedule: "*/15 * * * *"  # Every 15 minutes
+  schedule: "0 */6 * * *"  # Every 6 hours
 ```
 
 ### Repository Configuration
 
-Renovate will autodiscover all repositories in the Mosher-Labs organization
-that have a `renovate.json` file.
+Renovate will autodiscover all repositories in organizations where the GitHub
+App is installed that have a `renovate.json` file.
 
 The root `renovate.json` configuration is embedded in
 [manifests/configmap.yaml](manifests/configmap.yaml).
@@ -192,7 +190,7 @@ kubectl --kubeconfig ~/k3s.yaml get secret renovate-github-app -n renovate \
   -o jsonpath='{.data}' | jq 'keys'
 ```
 
-Should show: `["app-id", "installation-id", "private-key"]`
+Should show: `["app-id", "private-key"]`
 
 ### Job Failing
 
@@ -209,7 +207,7 @@ kubectl --kubeconfig ~/k3s.yaml logs -n renovate \
 
 Common issues:
 
-- **Bad credentials:** Verify App ID and Installation ID are correct
+- **Bad credentials:** Verify App ID and private key are correct
 - **Rate limiting:** Wait or reduce frequency
 - **Repository access:** Ensure GitHub App is installed on the repository
 
