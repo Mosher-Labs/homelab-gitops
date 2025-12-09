@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: renovate-token-generator
+  namespace: renovate
+data:
+  generate-token.sh: |
+    #!/bin/sh
+    set -e
+
+    # Install required packages
+    apk add --no-cache openssl
+
+    echo "Generating GitHub App installation token..."
+
+    # Read credentials from environment
+    APP_ID="${GITHUB_APP_ID}"
+    INSTALLATION_ID="${GITHUB_INSTALLATION_ID}"
+    PRIVATE_KEY_FILE="/secrets/private-key"
+
+    if [ -z "$APP_ID" ] || [ -z "$INSTALLATION_ID" ]; then
+      echo "ERROR: GITHUB_APP_ID or GITHUB_INSTALLATION_ID not set"
+      exit 1
+    fi
+
+    if [ ! -f "$PRIVATE_KEY_FILE" ]; then
+      echo "ERROR: Private key file not found at $PRIVATE_KEY_FILE"
+      exit 1
+    fi
+
+    # Generate JWT
+    now=$(date +%s)
+    iat=$((now - 60))
+    exp=$((now + 600))
+
+    header='{"alg":"RS256","typ":"JWT"}'
+    payload="{\"iat\":${iat},\"exp\":${exp},\"iss\":\"${APP_ID}\"}"
+
+    header_base64=$(echo -n "$header" | base64 | tr -d '=' | tr '/+' '_-' | \
+      tr -d '\n')
+    payload_base64=$(echo -n "$payload" | base64 | tr -d '=' | tr '/+' '_-' | \
+      tr -d '\n')
+
+    header_payload="${header_base64}.${payload_base64}"
+    signature=$(echo -n "${header_payload}" | openssl dgst -binary -sha256 \
+      -sign "$PRIVATE_KEY_FILE" | base64 | tr -d '=' | tr '/+' '_-' | \
+      tr -d '\n')
+
+    jwt="${header_payload}.${signature}"
+
+    echo "Generated JWT successfully"
+
+    # Exchange JWT for installation token
+    echo "Requesting installation token for installation ${INSTALLATION_ID}..."
+    api_url="https://api.github.com/app/installations"
+    token_url="${api_url}/${INSTALLATION_ID}/access_tokens"
+    response=$(wget -q -O - --header="Authorization: Bearer ${jwt}" \
+      --header="Accept: application/vnd.github+json" \
+      "${token_url}" \
+      --post-data='{}')
+
+    token=$(echo "$response" | \
+      sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+
+    if [ -z "$token" ]; then
+      echo "ERROR: Failed to get installation token"
+      echo "Response: $response"
+      exit 1
+    fi
+
+    echo "Installation token generated successfully"
+    echo -n "$token" > /token/github-token
+
+    echo "Token saved to /token/github-token"
