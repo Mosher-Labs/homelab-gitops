@@ -7,7 +7,8 @@ updates across the Mosher-Labs organization.
 
 - **Deployment:** CronJob (runs every 5 minutes)
 - **Authentication:** GitHub App
-- **Repositories:** Autodiscover all repos with `renovate.json` in Mosher-Labs
+- **Repositories:** Autodiscover repos with `renovate.json` in Mosher-Labs and
+  acebackapp orgs
 - **Monitoring:** Grafana dashboard for job history and status
 
 ## Quick Start
@@ -218,7 +219,7 @@ Renovate uses autodiscovery. Check:
 
 1. The GitHub App is installed on repositories
 1. Repositories have a `renovate.json` file
-1. The autodiscoverFilter matches: `"Mosher-Labs/*"`
+1. The autodiscoverFilter matches: `"Mosher-Labs/*"` or `"acebackapp/*"`
 
 View autodiscovery logs:
 
