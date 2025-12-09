@@ -1,15 +1,21 @@
 # Self-Hosted Renovate
 
-Self-hosted Renovate running as a Kubernetes CronJob for automated dependency
+Self-hosted Renovate running as Kubernetes CronJobs for automated dependency
 updates across multiple GitHub organizations.
 
 ## Overview
 
-- **Deployment:** CronJob (runs daily at 2am)
-- **Authentication:** GitHub App
-- **Repositories:** Autodiscover repos with `renovate.json` in Mosher-Labs and
-  acebackapp orgs
+- **Deployment:** Separate CronJob per organization (staggered schedules)
+- **Authentication:** GitHub App with installation tokens
+- **Repositories:** Autodiscover repos with `renovate.json` in each org
 - **Monitoring:** Grafana dashboard for job history and status
+
+## Current Organizations
+
+| Organization | CronJob | Schedule | Installation ID Key |
+|--------------|---------|----------|---------------------|
+| Mosher-Labs | `renovate-mosher-labs` | 2:00 AM | `installation-id-mosher-labs` |
+| acebackapp | `renovate-acebackapp` | 2:15 AM | `installation-id-acebackapp` |
 
 ## Quick Start
 
@@ -18,289 +24,255 @@ updates across multiple GitHub organizations.
 Follow the detailed guide in
 [docs/GITHUB_APP_SETUP.md](docs/GITHUB_APP_SETUP.md) to:
 
-1. Create a GitHub App in the Mosher-Labs organization
+1. Create a GitHub App in your primary organization
 1. Generate a private key
-1. Install the app on each organization (Mosher-Labs, acebackapp, etc.)
-1. Note the App ID (installation IDs are not needed with native GitHub App auth)
+1. Install the app on each organization you want to manage
+1. Note the App ID and each Installation ID
 
-### 2. Create Sealed Secret
+### 2. Get Installation IDs
+
+For each organization where the app is installed, get the installation ID:
+
+```bash
+# List installations for the GitHub App
+gh api /user/installations --jq '.installations[] | "\(.account.login): \(.id)"'
+```
+
+### 3. Create Sealed Secret
 
 ```bash
 # Replace with your actual values
 APP_ID="your-app-id"
 PRIVATE_KEY="$(cat path/to/your-app.pem)"
+MOSHER_LABS_INSTALLATION_ID="your-mosher-labs-installation-id"
+ACEBACKAPP_INSTALLATION_ID="your-acebackapp-installation-id"
 
-# Create the sealed secret
+# Create the sealed secret with all installation IDs
 kubectl create secret generic renovate-github-app \
   --namespace renovate \
   --from-literal=app-id="$APP_ID" \
   --from-literal=private-key="$PRIVATE_KEY" \
+  --from-literal=installation-id-mosher-labs="$MOSHER_LABS_INSTALLATION_ID" \
+  --from-literal=installation-id-acebackapp="$ACEBACKAPP_INSTALLATION_ID" \
   --dry-run=client -o yaml | \
 kubeseal --controller-namespace kube-system \
   --controller-name sealed-secrets-controller \
   --format yaml > infrastructure/renovate/manifests/sealed-secret.yaml
 ```
 
-### 3. Remove Template and Commit
-
-```bash
-# Remove the template file
-rm infrastructure/renovate/manifests/sealed-secret-template.yaml
-
-# Commit the sealed secret
-git add infrastructure/renovate/manifests/sealed-secret.yaml
-git commit -m "feat(renovate): add GitHub App sealed secret"
-git push
-```
-
 ### 4. Deploy
 
-ArgoCD will automatically detect and deploy Renovate.
+ArgoCD will automatically detect and deploy all Renovate CronJobs.
 
 Verify deployment:
 
 ```bash
-# Check CronJob
+# Check CronJobs
 kubectl --kubeconfig ~/k3s.yaml get cronjob -n renovate
 
-# Check for running jobs (may need to wait up to 5 minutes)
+# Check for running jobs
 kubectl --kubeconfig ~/k3s.yaml get jobs -n renovate
 
-# View logs
-kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l app=renovate --tail=100 -f
+# View logs for a specific org
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l org=mosher-labs --tail=100
+```
+
+## Adding a New Organization
+
+To add Renovate support for a new organization:
+
+### 1. Install the GitHub App
+
+Go to the GitHub App settings and install it on the new organization.
+
+### 2. Get the Installation ID
+
+```bash
+gh api /user/installations --jq '.installations[] | select(.account.login=="NEW_ORG") | .id'
+```
+
+### 3. Update the Sealed Secret
+
+Add the new installation ID to the secret:
+
+```bash
+# Add to the secret creation command:
+--from-literal=installation-id-neworg="$NEWORG_INSTALLATION_ID"
+```
+
+### 4. Create a New CronJob
+
+Copy an existing cronjob file and modify:
+
+```bash
+cp manifests/cronjob-mosher-labs.yaml manifests/cronjob-neworg.yaml
+```
+
+Update the new file:
+
+- Change `metadata.name` to `renovate-neworg`
+- Change `metadata.labels.org` and `spec.jobTemplate.metadata.labels.org`
+- Update `spec.schedule` to a different time (stagger by 15 minutes)
+- Change `GITHUB_INSTALLATION_ID` secretKeyRef to `installation-id-neworg`
+- Change `RENOVATE_AUTODISCOVER_FILTER` to `neworg/*`
+
+### 5. Commit and Deploy
+
+```bash
+git add manifests/cronjob-neworg.yaml
+git commit -m "feat(renovate): add neworg organization"
+git push
 ```
 
 ## Configuration
 
-### Schedule
+### Schedules
 
-The CronJob runs **daily at 2am** (`0 2 * * *`).
+CronJobs are staggered by 15 minutes to avoid running simultaneously:
 
-To change the schedule, edit
-[manifests/cronjob.yaml](manifests/cronjob.yaml):
+- Mosher-Labs: `0 2 * * *` (2:00 AM)
+- acebackapp: `15 2 * * *` (2:15 AM)
 
-```yaml
-spec:
-  schedule: "0 */6 * * *"  # Every 6 hours
-```
+### Shared Configuration
 
-### Repository Configuration
+The shared Renovate configuration is in
+[manifests/configmap.yaml](manifests/configmap.yaml). This applies to all orgs.
 
-Renovate will autodiscover all repositories in organizations where the GitHub
-App is installed that have a `renovate.json` file.
-
-The root `renovate.json` configuration is embedded in
-[manifests/configmap.yaml](manifests/configmap.yaml).
-
-To add a new repository:
-
-1. Add a `renovate.json` to the repository root
-1. Renovate will automatically detect it on the next run
-
-### Suspend CronJob
-
-To temporarily disable Renovate:
-
-```bash
-kubectl --kubeconfig ~/k3s.yaml patch cronjob renovate -n renovate \
-  -p '{"spec":{"suspend":true}}'
-```
-
-To re-enable:
-
-```bash
-kubectl --kubeconfig ~/k3s.yaml patch cronjob renovate -n renovate \
-  -p '{"spec":{"suspend":false}}'
-```
+Each CronJob overrides `autodiscoverFilter` via environment variable to limit
+which repositories it processes.
 
 ### Manual Trigger
 
-To manually run Renovate outside the schedule:
+To manually run Renovate for a specific organization:
 
 ```bash
+# Mosher-Labs
 kubectl --kubeconfig ~/k3s.yaml create job -n renovate \
-  renovate-manual-$(date +%s) --from=cronjob/renovate
+  renovate-mosher-labs-manual-$(date +%s) --from=cronjob/renovate-mosher-labs
+
+# acebackapp
+kubectl --kubeconfig ~/k3s.yaml create job -n renovate \
+  renovate-acebackapp-manual-$(date +%s) --from=cronjob/renovate-acebackapp
+```
+
+### Suspend/Resume
+
+To suspend a specific organization's CronJob:
+
+```bash
+kubectl --kubeconfig ~/k3s.yaml patch cronjob renovate-mosher-labs -n renovate \
+  -p '{"spec":{"suspend":true}}'
 ```
 
 ## Monitoring
+
+### Logs
+
+View logs for a specific organization:
+
+```bash
+# Mosher-Labs
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l org=mosher-labs --tail=100 -f
+
+# acebackapp
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l org=acebackapp --tail=100 -f
+
+# All organizations
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l app=renovate --tail=100 -f
+```
 
 ### Grafana Dashboard
 
 A Grafana dashboard is automatically deployed showing:
 
-- Active jobs
+- Active jobs per organization
 - Last scheduled time
 - Successful/failed job counts
 - Job duration history
-- Recent job list
-
-Access it in Grafana under **Dashboards → Renovate CronJob**
-
-### Logs
-
-View Renovate logs in real-time:
-
-```bash
-# Wait for a job to start
-kubectl --kubeconfig ~/k3s.yaml get jobs -n renovate -w
-
-# View logs
-kubectl --kubeconfig ~/k3s.yaml logs -n renovate \
-  -l app=renovate --tail=100 -f
-```
-
-### Metrics
-
-Renovate CronJob metrics are scraped by kube-state-metrics and available in
-Prometheus:
-
-- `kube_cronjob_status_active{cronjob="renovate"}`
-- `kube_cronjob_status_last_schedule_time{cronjob="renovate"}`
-- `kube_job_status_succeeded{job_name=~"renovate-.*"}`
-- `kube_job_status_failed{job_name=~"renovate-.*"}`
 
 ## Troubleshooting
 
-### No Jobs Running
-
-Check if the CronJob is suspended:
-
-```bash
-kubectl --kubeconfig ~/k3s.yaml get cronjob renovate -n renovate -o yaml | \
-  grep suspend
-```
-
-If `suspend: true`, unsuspend it:
-
-```bash
-kubectl --kubeconfig ~/k3s.yaml patch cronjob renovate -n renovate \
-  -p '{"spec":{"suspend":false}}'
-```
-
 ### Authentication Errors
 
-Verify the sealed secret was created correctly:
+Verify the sealed secret has all required keys:
 
 ```bash
-# Check if secret exists
-kubectl --kubeconfig ~/k3s.yaml get secret renovate-github-app -n renovate
-
-# Verify keys are present
 kubectl --kubeconfig ~/k3s.yaml get secret renovate-github-app -n renovate \
   -o jsonpath='{.data}' | jq 'keys'
 ```
 
-Should show: `["app-id", "private-key"]`
+Should show:
 
-### Job Failing
+```json
+["app-id", "installation-id-acebackapp", "installation-id-mosher-labs", "private-key"]
+```
 
-Check the job logs:
+### Job Failing for One Org
+
+Check the logs for that specific organization:
 
 ```bash
-# List recent jobs
-kubectl --kubeconfig ~/k3s.yaml get jobs -n renovate
-
-# View logs for latest job
-kubectl --kubeconfig ~/k3s.yaml logs -n renovate \
-  -l app=renovate --tail=200
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l org=acebackapp --tail=200
 ```
 
 Common issues:
 
-- **Bad credentials:** Verify App ID and private key are correct
-- **Rate limiting:** Wait or reduce frequency
-- **Repository access:** Ensure GitHub App is installed on the repository
+- **Bad installation ID:** Verify the installation ID is correct for that org
+- **App not installed:** Ensure the GitHub App is installed on that organization
+- **Repository access:** Check the app has access to repositories in that org
 
 ### No Repositories Found
 
-Renovate uses autodiscovery. Check:
-
-1. The GitHub App is installed on repositories
-1. Repositories have a `renovate.json` file
-1. The autodiscoverFilter matches: `"Mosher-Labs/*"` or `"acebackapp/*"`
-
-View autodiscovery logs:
+1. Verify the GitHub App is installed on the organization
+1. Check repositories have a `renovate.json` file
+1. View autodiscovery logs:
 
 ```bash
-kubectl --kubeconfig ~/k3s.yaml logs -n renovate \
-  -l app=renovate --tail=200 | grep -i autodiscover
+kubectl --kubeconfig ~/k3s.yaml logs -n renovate -l org=acebackapp \
+  --tail=200 | grep -i autodiscover
 ```
-
-## Updating Configuration
-
-### Update Renovate Image
-
-Edit [manifests/cronjob.yaml](manifests/cronjob.yaml):
-
-```yaml
-image: renovate/renovate:37.100.0  # Pin to specific version
-```
-
-### Update Config
-
-Edit [manifests/configmap.yaml](manifests/configmap.yaml) and commit.
-ArgoCD will automatically apply changes.
-
-### Rotate GitHub App Key
-
-1. Generate new private key in GitHub App settings
-1. Create new sealed secret
-1. Apply to cluster (ArgoCD will update)
-1. Delete old secret
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│          Kubernetes Cluster (k3s)           │
-│                                             │
-│  ┌───────────────────────────────────────┐ │
-│  │      renovate namespace               │ │
-│  │                                       │ │
-│  │  ┌─────────────────────────────────┐ │ │
-│  │  │  CronJob: renovate              │ │ │
-│  │  │  Schedule: */5 * * * *          │ │ │
-│  │  │  Image: renovate/renovate       │ │ │
-│  │  └─────────────┬───────────────────┘ │ │
-│  │                │                     │ │
-│  │                ▼                     │ │
-│  │  ┌─────────────────────────────────┐ │ │
-│  │  │  Job: renovate-<timestamp>      │ │ │
-│  │  │  - Reads ConfigMap              │ │ │
-│  │  │  - Uses GitHub App credentials  │ │ │
-│  │  │  - Scans repos for updates      │ │ │
-│  │  │  - Creates PRs                  │ │ │
-│  │  └─────────────────────────────────┘ │ │
-│  │                                       │ │
-│  └───────────────────────────────────────┘ │
-│                                             │
-│  ┌───────────────────────────────────────┐ │
-│  │      monitoring namespace             │ │
-│  │                                       │ │
-│  │  ┌─────────────────────────────────┐ │ │
-│  │  │  Prometheus                     │ │ │
-│  │  │  - Scrapes kube-state-metrics   │ │ │
-│  │  │  - Stores job metrics           │ │ │
-│  │  └─────────────┬───────────────────┘ │ │
-│  │                │                     │ │
-│  │                ▼                     │ │
-│  │  ┌─────────────────────────────────┐ │ │
-│  │  │  Grafana                        │ │ │
-│  │  │  - Renovate CronJob dashboard   │ │ │
-│  │  │  - Job history visualization    │ │ │
-│  │  └─────────────────────────────────┘ │ │
-│  │                                       │ │
-│  └───────────────────────────────────────┘ │
-│                                             │
-└─────────────────────────────────────────────┘
-                    │
-                    ▼
-          ┌─────────────────┐
-          │  GitHub API     │
-          │  - Authenticate │
-          │  - Scan repos   │
-          │  - Create PRs   │
-          └─────────────────┘
+```text
+┌─────────────────────────────────────────────────────────────┐
+│              Kubernetes Cluster (k3s)                       │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │                 renovate namespace                     │ │
+│  │                                                        │ │
+│  │  ┌────────────────────┐  ┌────────────────────┐       │ │
+│  │  │ CronJob:           │  │ CronJob:           │  ...  │ │
+│  │  │ renovate-mosher-   │  │ renovate-acebackapp│       │ │
+│  │  │ labs               │  │                    │       │ │
+│  │  │ Schedule: 2:00 AM  │  │ Schedule: 2:15 AM  │       │ │
+│  │  └─────────┬──────────┘  └─────────┬──────────┘       │ │
+│  │            │                       │                   │ │
+│  │            ▼                       ▼                   │ │
+│  │  ┌────────────────────────────────────────────┐       │ │
+│  │  │ Init Container: token-generator            │       │ │
+│  │  │ - Generates JWT from App credentials       │       │ │
+│  │  │ - Exchanges for installation access token  │       │ │
+│  │  └────────────────────────────────────────────┘       │ │
+│  │            │                                           │ │
+│  │            ▼                                           │ │
+│  │  ┌────────────────────────────────────────────┐       │ │
+│  │  │ Container: renovate                        │       │ │
+│  │  │ - Uses installation token                  │       │ │
+│  │  │ - Autodiscovers repos for that org         │       │ │
+│  │  │ - Creates dependency update PRs            │       │ │
+│  │  └────────────────────────────────────────────┘       │ │
+│  │                                                        │ │
+│  └───────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │   GitHub API    │
+                    │ - Mosher-Labs/* │
+                    │ - acebackapp/*  │
+                    │ - (future orgs) │
+                    └─────────────────┘
 ```
 
 ## References

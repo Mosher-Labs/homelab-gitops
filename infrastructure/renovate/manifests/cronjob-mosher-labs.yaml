@@ -2,14 +2,13 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: renovate
+  name: renovate-mosher-labs
   namespace: renovate
   labels:
     app: renovate
+    org: mosher-labs
 spec:
-  # Run once daily at 2am (reduce cluster load for 2-node setup)
   schedule: "0 2 * * *"
-  # Suspend to allow manual execution during testing
   suspend: false
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -20,46 +19,63 @@ spec:
         metadata:
           labels:
             app: renovate
+            org: mosher-labs
         spec:
           restartPolicy: Never
+          initContainers:
+            - name: token-generator
+              image: alpine:3.21
+              command: ["/bin/sh", "/scripts/generate-token.sh"]
+              env:
+                - name: GITHUB_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: app-id
+                - name: GITHUB_INSTALLATION_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: installation-id-mosher-labs
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                - name: github-app-secret
+                  mountPath: /secrets
+                  readOnly: true
+                - name: token
+                  mountPath: /token
           containers:
             - name: renovate
               image: renovate/renovate:latest
               command: ["/bin/sh", "-c"]
               args:
                 - |
-                  export RENOVATE_GITHUB_APP_KEY="$(cat /secrets/private-key)"
+                  export RENOVATE_TOKEN=$(cat /token/github-token)
                   exec renovate
               env:
-                # Platform
                 - name: RENOVATE_PLATFORM
                   value: "github"
                 - name: RENOVATE_ENDPOINT
                   value: "https://api.github.com"
-                # GitHub App authentication (supports multiple orgs)
-                - name: RENOVATE_GITHUB_APP_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: renovate-github-app
-                      key: app-id
-                # Git author
                 - name: RENOVATE_GIT_AUTHOR
                   value: "EikthyrnirBot <bot@renovateapp.com>"
-                # Log level and debugging
                 - name: LOG_LEVEL
                   value: "info"
                 - name: RENOVATE_ONBOARDING
                   value: "false"
                 - name: RENOVATE_REQUIRE_CONFIG
                   value: "optional"
-                # Config file
                 - name: RENOVATE_CONFIG_FILE
                   value: "/config/config.json"
+                # Org-specific autodiscover filter
+                - name: RENOVATE_AUTODISCOVER_FILTER
+                  value: "Mosher-Labs/*"
               volumeMounts:
                 - name: config
                   mountPath: /config
-                - name: github-app-secret
-                  mountPath: /secrets
+                - name: token
+                  mountPath: /token
                   readOnly: true
               resources:
                 requests:
@@ -72,6 +88,12 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
+            - name: scripts
+              configMap:
+                name: renovate-token-generator
+                defaultMode: 0755
             - name: github-app-secret
               secret:
                 secretName: renovate-github-app
+            - name: token
+              emptyDir: {}
