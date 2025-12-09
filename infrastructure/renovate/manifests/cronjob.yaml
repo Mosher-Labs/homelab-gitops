@@ -37,11 +37,9 @@ spec:
                     secretKeyRef:
                       name: renovate-github-app
                       key: app-id
-                - name: RENOVATE_GITHUB_APP_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: renovate-github-app
-                      key: private-key
+                # Use file path for private key to preserve newlines
+                - name: RENOVATE_GITHUB_APP_KEY_PATH
+                  value: "/secrets/private-key"
                 # Git author
                 - name: RENOVATE_GIT_AUTHOR
                   value: "EikthyrnirBot <bot@renovateapp.com>"
@@ -58,6 +56,9 @@ spec:
               volumeMounts:
                 - name: config
                   mountPath: /config
+                - name: github-app-secret
+                  mountPath: /secrets
+                  readOnly: true
               resources:
                 requests:
                   cpu: 100m
@@ -69,3 +70,6 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
+            - name: github-app-secret
+              secret:
+                secretName: renovate-github-app
