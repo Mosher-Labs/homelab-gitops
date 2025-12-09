@@ -25,6 +25,11 @@ spec:
           containers:
             - name: renovate
               image: renovate/renovate:latest
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  export RENOVATE_GITHUB_APP_KEY="$(cat /secrets/private-key)"
+                  exec renovate
               env:
                 # Platform
                 - name: RENOVATE_PLATFORM
@@ -37,9 +42,6 @@ spec:
                     secretKeyRef:
                       name: renovate-github-app
                       key: app-id
-                # Use file path for private key to preserve newlines
-                - name: RENOVATE_GITHUB_APP_KEY_PATH
-                  value: "/secrets/private-key"
                 # Git author
                 - name: RENOVATE_GIT_AUTHOR
                   value: "EikthyrnirBot <bot@renovateapp.com>"
