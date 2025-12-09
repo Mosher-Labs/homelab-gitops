@@ -16,7 +16,7 @@ data:
       "platform": "github",
       "gitAuthor": "EikthyrnirBot <bot@renovateapp.com>",
       "autodiscover": true,
-      "autodiscoverFilter": ["Mosher-Labs/*"],
+      "autodiscoverFilter": ["Mosher-Labs/*", "acebackapp/*"],
       "timezone": "America/Denver",
       "dependencyDashboard": true,
       "dependencyDashboardTitle": "🤖 Renovate Dependency Dashboard",
