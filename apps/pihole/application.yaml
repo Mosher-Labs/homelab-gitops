@@ -70,6 +70,18 @@ spec:
           # Enable DNSSEC
           DNSSEC: "true"
 
+          # Block analytics/tracking domains for Discr development
+          # This prevents home network traffic from skewing metrics
+          blacklist:
+            # Sentry error tracking
+            - o4510563703193600.ingest.us.sentry.io
+            # Cloudflare Web Analytics
+            - static.cloudflareinsights.com
+            - cloudflareinsights.com
+            # Segment analytics (used by various services)
+            - api.segment.io
+            - cdn.segment.com
+
           # Timezone
           timezone: "America/Denver"
 
