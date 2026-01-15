@@ -30,12 +30,8 @@ spec:
               metallb.universe.tf/allow-shared-ip: pihole-dns
           serviceWeb:
             type: ClusterIP
-            # Session affinity ensures exporter requests go to same pod
-            # Required because PiHole API sessions are instance-specific
-            sessionAffinity: ClientIP
-            sessionAffinityConfig:
-              clientIP:
-                timeoutSeconds: 10800  # 3 hours
+            # Note: sessionAffinity configured via manifest overlay
+            # (Helm chart doesn't support sessionAffinity value)
 
           # Web UI ingress for management
           ingress:
