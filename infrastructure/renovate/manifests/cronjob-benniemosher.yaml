@@ -2,25 +2,26 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: renovate-acebackapp
+  name: renovate-benniemosher
   namespace: renovate
   labels:
     app: renovate
-    org: acebackapp
+    org: benniemosher
 spec:
   # Stagger schedule to avoid running simultaneously
-  schedule: "15 2 * * *"
+  schedule: "15 3 * * *"
   suspend: false
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
+      backoffLimit: 2
       template:
         metadata:
           labels:
             app: renovate
-            org: acebackapp
+            org: benniemosher
         spec:
           restartPolicy: Never
           initContainers:
@@ -37,7 +38,7 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: renovate-github-app
-                      key: installation-id-acebackapp
+                      key: installation-id-benniemosher
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts
@@ -69,9 +70,9 @@ spec:
                   value: "optional"
                 - name: RENOVATE_CONFIG_FILE
                   value: "/config/config.json"
-                # Org-specific autodiscover filter
+                # User-specific autodiscover filter
                 - name: RENOVATE_AUTODISCOVER_FILTER
-                  value: "acebackapp/*"
+                  value: "benniemosher/*"
               volumeMounts:
                 - name: config
                   mountPath: /config
