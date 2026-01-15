@@ -1,0 +1,32 @@
+---
+# Service patch to add sessionAffinity to pihole-web
+# The Helm chart doesn't support sessionAffinity as a value,
+# so we override the service here.
+# PiHole API sessions are instance-specific, so all requests
+# from the same client must go to the same pod.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole-web
+  namespace: pihole
+  labels:
+    app: pihole
+    app.kubernetes.io/name: pihole
+spec:
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
+  selector:
+    app: pihole
+    release: pihole
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
