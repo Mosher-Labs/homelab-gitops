@@ -12,7 +12,7 @@ spec:
     # Home Assistant Helm chart from gabe565
     repoURL: https://charts.gabe565.com
     chart: home-assistant
-    targetRevision: 0.25.1
+    targetRevision: 0.17.0
     helm:
       valuesObject:
         # Image settings
