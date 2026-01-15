@@ -232,6 +232,15 @@ kubeseal --controller-namespace kube-system \
 
 ### Git Workflow
 
+**CRITICAL: ALWAYS USE PULL REQUESTS - NO EXCEPTIONS**
+
+- NEVER commit directly to `main` branch
+- NEVER push directly to `main` branch
+- ALL changes MUST go through a PR, even small fixes
+- This applies to Claude Code sessions as well as manual changes
+
+**Workflow Steps:**
+
 1. **Create feature branch:** `git checkout -b feature/description`
 1. **Make changes** to code/manifests/docs
 1. **ALWAYS run pre-commit BEFORE committing:** `pre-commit run --all-files` to check
