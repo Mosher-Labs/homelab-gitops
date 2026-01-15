@@ -1,0 +1,88 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: storage-monitoring-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: storage.rules
+      interval: 30s
+      rules:
+        # PVC almost full
+        - alert: PersistentVolumeAlmostFull
+          expr: |
+            kubelet_volume_stats_used_bytes /
+            kubelet_volume_stats_capacity_bytes * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+            component: storage
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} almost full"
+            description: |
+              PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}
+              is {{ $value | humanize }}% full.
+              Consider expanding the volume or cleaning up data.
+
+        # PVC critically full
+        - alert: PersistentVolumeCriticallyFull
+          expr: |
+            kubelet_volume_stats_used_bytes /
+            kubelet_volume_stats_capacity_bytes * 100 > 95
+          for: 1m
+          labels:
+            severity: critical
+            component: storage
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} critically full"
+            description: |
+              PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}
+              is {{ $value | humanize }}% full.
+              Immediate action required to prevent data loss.
+
+        # PV in failed state
+        - alert: PersistentVolumeFailed
+          expr: kube_persistentvolume_status_phase{phase="Failed"} == 1
+          for: 1m
+          labels:
+            severity: critical
+            component: storage
+          annotations:
+            summary: "PersistentVolume {{ $labels.persistentvolume }} failed"
+            description: |
+              PersistentVolume {{ $labels.persistentvolume }} is in
+              Failed state. Data may be at risk.
+
+        # PVC pending for too long
+        - alert: PersistentVolumeClaimPending
+          expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
+          for: 15m
+          labels:
+            severity: warning
+            component: storage
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} pending"
+            description: |
+              PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}
+              has been pending for more than 15 minutes.
+              Check storage provisioner and available capacity.
+
+        # PVC inodes running low
+        - alert: PersistentVolumeInodesLow
+          expr: |
+            kubelet_volume_stats_inodes_used /
+            kubelet_volume_stats_inodes * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+            component: storage
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} inodes low"
+            description: |
+              PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}
+              has used {{ $value | humanize }}% of available inodes.
+              Too many small files may be causing this.

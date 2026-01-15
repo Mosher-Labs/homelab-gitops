@@ -1,0 +1,106 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: deployment-monitoring-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: deployment.rules
+      interval: 30s
+      rules:
+        # Deployment has no available replicas
+        - alert: DeploymentNoAvailableReplicas
+          expr: |
+            kube_deployment_status_replicas_available == 0
+            and kube_deployment_spec_replicas > 0
+          for: 5m
+          labels:
+            severity: critical
+            component: deployment
+          annotations:
+            summary: "Deployment {{ $labels.deployment }} has no replicas"
+            description: |
+              Deployment {{ $labels.namespace }}/{{ $labels.deployment }}
+              has no available replicas for more than 5 minutes.
+              Service may be completely unavailable.
+
+        # Deployment replicas mismatch
+        - alert: DeploymentReplicasMismatch
+          expr: |
+            kube_deployment_spec_replicas !=
+            kube_deployment_status_replicas_available
+          for: 15m
+          labels:
+            severity: warning
+            component: deployment
+          annotations:
+            summary: "Deployment {{ $labels.deployment }} replica mismatch"
+            description: |
+              Deployment {{ $labels.namespace }}/{{ $labels.deployment }}
+              has {{ $value }} available replicas, but
+              {{ $labels.spec_replicas }} were requested.
+
+        # StatefulSet replicas mismatch
+        - alert: StatefulSetReplicasMismatch
+          expr: |
+            kube_statefulset_status_replicas_ready !=
+            kube_statefulset_status_replicas
+          for: 15m
+          labels:
+            severity: warning
+            component: statefulset
+          annotations:
+            summary: "StatefulSet {{ $labels.statefulset }} replica mismatch"
+            description: |
+              StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }}
+              does not have all replicas ready.
+
+        # DaemonSet not scheduled on all nodes
+        - alert: DaemonSetNotScheduled
+          expr: |
+            kube_daemonset_status_desired_number_scheduled -
+            kube_daemonset_status_current_number_scheduled > 0
+          for: 10m
+          labels:
+            severity: warning
+            component: daemonset
+          annotations:
+            summary: "DaemonSet {{ $labels.daemonset }} not fully scheduled"
+            description: |
+              DaemonSet {{ $labels.namespace }}/{{ $labels.daemonset }}
+              is not scheduled on all desired nodes.
+
+        # DaemonSet pods not ready
+        - alert: DaemonSetPodsNotReady
+          expr: |
+            kube_daemonset_status_number_ready /
+            kube_daemonset_status_desired_number_scheduled < 1
+          for: 10m
+          labels:
+            severity: warning
+            component: daemonset
+          annotations:
+            summary: "DaemonSet {{ $labels.daemonset }} pods not ready"
+            description: |
+              DaemonSet {{ $labels.namespace }}/{{ $labels.daemonset }}
+              does not have all pods in ready state.
+
+        # HPA at max replicas
+        - alert: HPAAtMaxReplicas
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas ==
+            kube_horizontalpodautoscaler_spec_max_replicas
+          for: 30m
+          labels:
+            severity: warning
+            component: hpa
+          annotations:
+            summary: "HPA {{ $labels.horizontalpodautoscaler }} at max"
+            description: |
+              HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}
+              has been at max replicas for 30 minutes.
+              Consider increasing max replicas if load continues.

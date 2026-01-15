@@ -1,0 +1,86 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: argocd-monitoring-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: argocd.rules
+      interval: 30s
+      rules:
+        # ArgoCD application out of sync
+        - alert: ArgoCDAppOutOfSync
+          expr: |
+            argocd_app_info{sync_status!="Synced"} == 1
+          for: 30m
+          labels:
+            severity: warning
+            component: argocd
+          annotations:
+            summary: "ArgoCD app {{ $labels.name }} out of sync"
+            description: |
+              ArgoCD application {{ $labels.name }} has been out of sync
+              for more than 30 minutes. Sync status: {{ $labels.sync_status }}
+
+        # ArgoCD application unhealthy
+        - alert: ArgoCDAppUnhealthy
+          expr: |
+            argocd_app_info{health_status!="Healthy",
+              health_status!="Progressing"} == 1
+          for: 15m
+          labels:
+            severity: warning
+            component: argocd
+          annotations:
+            summary: "ArgoCD app {{ $labels.name }} unhealthy"
+            description: |
+              ArgoCD application {{ $labels.name }} is unhealthy.
+              Health status: {{ $labels.health_status }}
+
+        # ArgoCD application sync failed
+        - alert: ArgoCDAppSyncFailed
+          expr: |
+            argocd_app_info{sync_status="Unknown"} == 1
+          for: 5m
+          labels:
+            severity: critical
+            component: argocd
+          annotations:
+            summary: "ArgoCD app {{ $labels.name }} sync unknown"
+            description: |
+              ArgoCD application {{ $labels.name }} has unknown sync status.
+              This may indicate a sync failure or configuration issue.
+
+        # ArgoCD server not ready
+        - alert: ArgoCDServerNotReady
+          expr: |
+            kube_deployment_status_replicas_available{
+              deployment="argocd-server",namespace="argocd"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: argocd
+          annotations:
+            summary: "ArgoCD server not available"
+            description: |
+              ArgoCD server has no available replicas.
+              GitOps deployments will not function.
+
+        # ArgoCD repo server not ready
+        - alert: ArgoCDRepoServerNotReady
+          expr: |
+            kube_deployment_status_replicas_available{
+              deployment="argocd-repo-server",namespace="argocd"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: argocd
+          annotations:
+            summary: "ArgoCD repo server not available"
+            description: |
+              ArgoCD repo server has no available replicas.
+              Application syncs will fail.
