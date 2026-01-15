@@ -49,6 +49,11 @@ data:
       },
       "packageRules": [
         {
+          "description": "Disable Renovate for tidr (too memory intensive)",
+          "matchRepositories": ["Mosher-Labs/tidr"],
+          "enabled": false
+        },
+        {
           "description": "Helm charts - group by application",
           "matchDatasources": [
             "helm"
