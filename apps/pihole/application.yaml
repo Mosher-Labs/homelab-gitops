@@ -30,8 +30,6 @@ spec:
               metallb.universe.tf/allow-shared-ip: pihole-dns
           serviceWeb:
             type: ClusterIP
-            # Note: sessionAffinity configured via manifest overlay
-            # (Helm chart doesn't support sessionAffinity value)
 
           # Web UI ingress for management
           ingress:
@@ -57,11 +55,12 @@ spec:
               cpu: 100m
               memory: 128Mi
 
-          # HA: 2 replicas for 2-node cluster
-          replicaCount: 2
+          # Single replica - Pi-hole v6 sessions don't work well with
+          # multiple replicas (salted password hashes per pod)
+          replicaCount: 1
 
-          # Persistence disabled for stateless HA setup
-          # Configuration is managed via Helm values (GitOps)
+          # Persistence disabled - config managed via Helm values (GitOps)
+          # Query logs are ephemeral (acceptable trade-off)
           persistentVolumeClaim:
             enabled: false
 
@@ -86,32 +85,6 @@ spec:
 
           # Timezone
           timezone: "America/Denver"
-
-          # HA: Topology spread constraints for even distribution
-          topologySpreadConstraints:
-            - maxSkew: 1
-              topologyKey: kubernetes.io/hostname
-              whenUnsatisfiable: ScheduleAnyway
-              labelSelector:
-                matchLabels:
-                  app: pihole
-                  release: pihole
-
-          # HA: Pod Disruption Budget - maintain at least 1 pod
-          podDisruptionBudget:
-            enabled: true
-            minAvailable: 1
-
-          # HA: Anti-affinity to prefer different nodes
-          affinity:
-            podAntiAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  podAffinityTerm:
-                    labelSelector:
-                      matchLabels:
-                        app: pihole
-                    topologyKey: kubernetes.io/hostname
 
           # Monitoring - Prometheus metrics
           # NOTE: Sidecar disabled due to circular dependency (can't pull
