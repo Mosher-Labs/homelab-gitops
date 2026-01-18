@@ -37,6 +37,9 @@ spec:
           ingress:
             enabled: true
             ingressClassName: traefik
+            annotations:
+              traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+              traefik.ingress.kubernetes.io/service.sticky.cookie.name: pihole
             hosts:
               - pihole.mosher-labs.local
             path: /
