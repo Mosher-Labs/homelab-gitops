@@ -99,13 +99,18 @@ data:
           ]
         },
         {
-          "description": "GitHub Actions - group all updates",
-          "matchManagers": [
-            "github-actions"
-          ],
-          "groupName": "GitHub Actions",
+          "description": "GitHub Actions - group and automerge non-major",
+          "matchManagers": ["github-actions"],
+          "matchUpdateTypes": ["minor", "patch"],
+          "groupName": "github-actions non-major",
           "automerge": true,
           "automergeType": "pr"
+        },
+        {
+          "description": "GitHub Actions - group major updates",
+          "matchManagers": ["github-actions"],
+          "matchUpdateTypes": ["major"],
+          "groupName": "github-actions major"
         },
         {
           "description": "Docker images - group updates",
