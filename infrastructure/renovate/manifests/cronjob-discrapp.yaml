@@ -61,7 +61,8 @@ spec:
                 - name: RENOVATE_ENDPOINT
                   value: "https://api.github.com"
                 - name: RENOVATE_GIT_AUTHOR
-                  value: "EikthyrnirBot <bot@renovateapp.com>"
+                  # yamllint disable-line rule:line-length
+                  value: "eikthyrnirbot[bot] <245716739+eikthyrnirbot[bot]@users.noreply.github.com>"
                 - name: LOG_LEVEL
                   value: "info"
                 - name: RENOVATE_ONBOARDING

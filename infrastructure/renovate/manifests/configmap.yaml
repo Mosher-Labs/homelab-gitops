@@ -14,11 +14,12 @@ data:
         ":gitSignOff"
       ],
       "platform": "github",
-      "gitAuthor": "EikthyrnirBot <bot@renovateapp.com>",
+      "gitAuthor": "eikthyrnirbot[bot] <245716739+eikthyrnirbot[bot]@users.noreply.github.com>",
       "autodiscover": true,
       "repositoryCache": "enabled",
-      "prConcurrentLimit": 5,
-      "prHourlyLimit": 2,
+      "prConcurrentLimit": 0,
+      "prHourlyLimit": 0,
+      "pruneStaleBranches": true,
       "timezone": "America/Denver",
       "dependencyDashboard": true,
       "dependencyDashboardTitle": "🤖 Renovate Dependency Dashboard",
@@ -28,8 +29,8 @@ data:
       "commitMessageExtra": "to {{newValue}}",
       "commitMessageTopic": "{{depName}}",
       "automerge": false,
-      "platformAutomerge": false,
-      "rebaseWhen": "behind-base-branch",
+      "platformAutomerge": true,
+      "rebaseWhen": "conflicted",
       "labels": [
         "dependencies",
         "renovate"
@@ -52,6 +53,24 @@ data:
           "description": "Disable Renovate for tidr (too memory intensive)",
           "matchRepositories": ["Mosher-Labs/tidr"],
           "enabled": false
+        },
+        {
+          "description": "Group all non-major npm updates together",
+          "matchManagers": ["npm"],
+          "matchUpdateTypes": ["minor", "patch", "pin", "digest", "lockFileMaintenance"],
+          "groupName": "npm non-major updates"
+        },
+        {
+          "description": "Group all major npm updates together",
+          "matchManagers": ["npm"],
+          "matchUpdateTypes": ["major"],
+          "groupName": "npm major updates"
+        },
+        {
+          "description": "Automerge minor/patch updates",
+          "matchUpdateTypes": ["minor", "patch"],
+          "automerge": true,
+          "automergeType": "pr"
         },
         {
           "description": "Helm charts - group by application",
