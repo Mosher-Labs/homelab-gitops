@@ -23,7 +23,7 @@ spec:
     # Helm chart source
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
-      targetRevision: 79.12.0
+      targetRevision: 81.3.0
       helm:
         valuesObject:
         # Prometheus Operator Configuration
@@ -100,25 +100,25 @@ spec:
               resolve_timeout: 5m
               slack_api_url_file: /etc/alertmanager/secrets/slack-webhook/url
             route:
-              group_by: ['alertname', 'cluster', 'service']
+              group_by: ["alertname", "cluster", "service"]
               group_wait: 10s
               group_interval: 10s
               repeat_interval: 12h
-              receiver: 'slack-notifications'
+              receiver: "slack-notifications"
               routes:
                 - match:
                     alertname: Watchdog
-                  receiver: 'null'
+                  receiver: "null"
                 - match:
                     severity: critical
-                  receiver: 'slack-notifications'
+                  receiver: "slack-notifications"
                   continue: true
             receivers:
-              - name: 'null'
-              - name: 'slack-notifications'
+              - name: "null"
+              - name: "slack-notifications"
                 slack_configs:
-                  - channel: '#homelab-alerts'
-                    title: 'Homelab Alert: {{ .GroupLabels.alertname }}'
+                  - channel: "#homelab-alerts"
+                    title: "Homelab Alert: {{ .GroupLabels.alertname }}"
                     text: >-
                       {{ range .Alerts }}
                         *Alert:* {{ .Labels.alertname }}
