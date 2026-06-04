@@ -1,0 +1,10 @@
+---
+# The sealed secret for GITHUB_PAT goes in this directory.
+# See the book-review-publisher RUNBOOK.md for creation instructions.
+# Until the sealed secret is added, the Deployment pod will fail to start.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: book-review-publisher
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
