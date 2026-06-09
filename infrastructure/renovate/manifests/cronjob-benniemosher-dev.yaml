@@ -73,6 +73,8 @@ spec:
                 # Org-specific autodiscover filter
                 - name: RENOVATE_AUTODISCOVER_FILTER
                   value: "benniemosher-dev/*"
+                - name: RENOVATE_AUTODISCOVER_TOPICS
+                  value: "renovate"
               volumeMounts:
                 - name: config
                   mountPath: /config

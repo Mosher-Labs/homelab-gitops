@@ -74,6 +74,8 @@ spec:
                 # User-specific autodiscover filter
                 - name: RENOVATE_AUTODISCOVER_FILTER
                   value: "benniemosher/*"
+                - name: RENOVATE_AUTODISCOVER_TOPICS
+                  value: "renovate"
               volumeMounts:
                 - name: config
                   mountPath: /config
