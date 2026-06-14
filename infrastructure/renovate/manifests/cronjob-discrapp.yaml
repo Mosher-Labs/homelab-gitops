@@ -26,7 +26,7 @@ spec:
           restartPolicy: Never
           initContainers:
             - name: token-generator
-              image: alpine:3.23
+              image: alpine:3.24
               command: ["/bin/sh", "/scripts/generate-token.sh"]
               env:
                 - name: GITHUB_APP_ID
