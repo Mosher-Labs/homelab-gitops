@@ -26,114 +26,145 @@ spec:
       targetRevision: 87.17.0
       helm:
         valuesObject:
-        # Prometheus Operator Configuration
-        prometheusOperator:
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
+          # Prometheus Operator Configuration
+          prometheusOperator:
+            resources:
+              limits:
+                cpu: 200m
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
 
-        # Prometheus Server Configuration
-        prometheus:
-          prometheusSpec:
-            # Data retention
-            retention: 14d
-            retentionSize: "10GB"
-            # Storage
-            storageSpec:
-              volumeClaimTemplate:
-                spec:
-                  accessModes: ["ReadWriteOnce"]
-                  resources:
-                    requests:
-                      storage: 15Gi
+          # Prometheus Server Configuration
+          prometheus:
+            prometheusSpec:
+              # Data retention
+              retention: 14d
+              retentionSize: "10GB"
+              # Storage
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 15Gi
+              # Resource limits
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 1Gi
+                requests:
+                  cpu: 200m
+                  memory: 512Mi
+              # Service monitors
+              serviceMonitorSelectorNilUsesHelmValues: false
+              podMonitorSelectorNilUsesHelmValues: false
+
+          # Grafana Configuration
+          grafana:
+            # Admin credentials (change after first login!)
+            adminPassword: admin
+            # Ingress for Grafana UI
+            ingress:
+              enabled: true
+              ingressClassName: traefik
+              hosts:
+                - grafana.mosher-labs.local
             # Resource limits
             resources:
               limits:
-                cpu: 500m
-                memory: 1Gi
-              requests:
                 cpu: 200m
-                memory: 512Mi
-            # Service monitors
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
+                memory: 256Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            # Persistence
+            persistence:
+              enabled: true
+              size: 5Gi
+            # Grafana configuration
+            grafana.ini:
+              server:
+                root_url: http://grafana.mosher-labs.local
+              analytics:
+                check_for_updates: false
+                reporting_enabled: false
 
-        # Grafana Configuration
-        grafana:
-          # Admin credentials (change after first login!)
-          adminPassword: admin
-          # Ingress for Grafana UI
-          ingress:
+          # AlertManager Configuration
+          alertmanager:
+            # AlertManager configuration via secret
+            config:
+              global:
+                resolve_timeout: 5m
+                slack_api_url_file: /etc/alertmanager/secrets/slack-webhook/url
+              route:
+                group_by: ["alertname", "cluster", "service"]
+                group_wait: 10s
+                group_interval: 10s
+                repeat_interval: 12h
+                receiver: "slack-notifications"
+                routes:
+                  - match:
+                      alertname: Watchdog
+                    receiver: "null"
+                  - match:
+                      severity: critical
+                    receiver: "slack-notifications"
+                    continue: true
+              receivers:
+                - name: "null"
+                - name: "slack-notifications"
+                  slack_configs:
+                    - channel: "#homelab-alerts"
+                      title: "Homelab Alert: {{ .GroupLabels.alertname }}"
+                      text: >-
+                        {{ range .Alerts }}
+                          *Alert:* {{ .Labels.alertname }}
+                          *Severity:* {{ .Labels.severity }}
+                          *Summary:* {{ .Annotations.summary }}
+                          *Description:* {{ .Annotations.description }}
+                          *Node:* {{ .Labels.node }}
+                        {{ end }}
+                      send_resolved: true
+
+            alertmanagerSpec:
+              # Mount slack webhook secret
+              secrets:
+                - slack-webhook
+              # Resource limits
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+              # Storage
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 2Gi
+
+          # Disable k3s-incompatible components
+          # k3s doesn't expose these as separate pods
+          kubeEtcd:
+            enabled: false
+          kubeControllerManager:
+            enabled: false
+          kubeScheduler:
+            enabled: false
+
+          # Node exporter - collects node metrics
+          nodeExporter:
             enabled: true
-            ingressClassName: traefik
-            hosts:
-              - grafana.mosher-labs.local
-          # Resource limits
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-          # Persistence
-          persistence:
-            enabled: true
-            size: 5Gi
-          # Grafana configuration
-          grafana.ini:
-            server:
-              root_url: http://grafana.mosher-labs.local
-            analytics:
-              check_for_updates: false
-              reporting_enabled: false
 
-        # AlertManager Configuration
-        alertmanager:
-          # AlertManager configuration via secret
-          config:
-            global:
-              resolve_timeout: 5m
-              slack_api_url_file: /etc/alertmanager/secrets/slack-webhook/url
-            route:
-              group_by: ["alertname", "cluster", "service"]
-              group_wait: 10s
-              group_interval: 10s
-              repeat_interval: 12h
-              receiver: "slack-notifications"
-              routes:
-                - match:
-                    alertname: Watchdog
-                  receiver: "null"
-                - match:
-                    severity: critical
-                  receiver: "slack-notifications"
-                  continue: true
-            receivers:
-              - name: "null"
-              - name: "slack-notifications"
-                slack_configs:
-                  - channel: "#homelab-alerts"
-                    title: "Homelab Alert: {{ .GroupLabels.alertname }}"
-                    text: >-
-                      {{ range .Alerts }}
-                        *Alert:* {{ .Labels.alertname }}
-                        *Severity:* {{ .Labels.severity }}
-                        *Summary:* {{ .Annotations.summary }}
-                        *Description:* {{ .Annotations.description }}
-                        *Node:* {{ .Labels.node }}
-                      {{ end }}
-                    send_resolved: true
-
-          alertmanagerSpec:
-            # Mount slack webhook secret
-            secrets:
-              - slack-webhook
-            # Resource limits
+          # Kube-state-metrics - collects K8s object metrics
+          kube-state-metrics:
             resources:
               limits:
                 cpu: 100m
@@ -141,37 +172,6 @@ spec:
               requests:
                 cpu: 50m
                 memory: 64Mi
-            # Storage
-            storage:
-              volumeClaimTemplate:
-                spec:
-                  accessModes: ["ReadWriteOnce"]
-                  resources:
-                    requests:
-                      storage: 2Gi
-
-        # Disable k3s-incompatible components
-        # k3s doesn't expose these as separate pods
-        kubeEtcd:
-          enabled: false
-        kubeControllerManager:
-          enabled: false
-        kubeScheduler:
-          enabled: false
-
-        # Node exporter - collects node metrics
-        nodeExporter:
-          enabled: true
-
-        # Kube-state-metrics - collects K8s object metrics
-        kube-state-metrics:
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
 
   # DESTINATION: Where should it be deployed?
   destination:
