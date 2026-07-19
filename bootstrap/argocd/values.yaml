@@ -1,6 +1,7 @@
 ---
-# ArgoCD Helm Chart Values - HA Configuration
-# 2-replica setup for redundancy across 2-node cluster
+# ArgoCD Helm Chart Values - Single-node degraded mode
+# macmini-2010 is offline (I/O errors); running on hp-elitedesk only.
+# Restore replicas to 2 and remove hardAntiAffinity override when node returns.
 # Values must be nested under 'argo-cd' for dependency chart
 
 argo-cd:
@@ -11,13 +12,15 @@ argo-cd:
     params:
       server.insecure: true  # Using Cloudflare tunnel
 
-  # HA: Redis with Sentinel for automatic failover
+  # Redis HA: single replica while macmini-2010 is offline
   redis-ha:
     enabled: true
-    replicas: 2
+    replicas: 1
+    hardAntiAffinity: false
     haproxy:
       enabled: true
-      replicas: 2
+      replicas: 1
+      hardAntiAffinity: false
       resources:
         limits:
           cpu: 100m
