@@ -35,18 +35,6 @@ spec:
               requests:
                 cpu: 100m
                 memory: 128Mi
-            # Use the operator's built-in self-managed webhook TLS instead of
-            # the Job-based cert-patch hooks. The chart's patch Job shares
-            # RBAC across Helm's pre/post-install hooks with a hook-succeeded
-            # delete policy, which ArgoCD deletes after the PreSync phase,
-            # causing the PostSync phase to fail looking for resources that
-            # are already gone. The persistent webhook deployment avoids
-            # Job-based hooks entirely.
-            admissionWebhooks:
-              deployment:
-                enabled: true
-              patch:
-                enabled: false
 
           # Prometheus Server Configuration
           prometheus:
