@@ -130,7 +130,17 @@ spec:
                         {{ end }}
                       send_resolved: true
 
+            # Ingress for AlertManager UI
+            ingress:
+              enabled: true
+              ingressClassName: traefik
+              hosts:
+                - alertmanager.mosher-labs.local
+
             alertmanagerSpec:
+              # External URL so Slack notification links resolve outside the
+              # cluster (defaults to the internal Service DNS name otherwise)
+              externalUrl: "http://alertmanager.mosher-labs.local"
               # Mount slack webhook secret
               secrets:
                 - slack-webhook

@@ -13,6 +13,7 @@ Complete Kubernetes monitoring stack including:
 
 - **Grafana UI:** `http://grafana.mosher-labs.local`
 - **Default Credentials:** admin / admin (change after first login!)
+- **AlertManager UI:** `http://alertmanager.mosher-labs.local`
 
 ## Resource Usage
 
@@ -40,7 +41,10 @@ Complete Kubernetes monitoring stack including:
 ### AlertManager
 
 - **Storage:** 2Gi PVC
-- **Configuration:** Default (needs customization for Slack/email)
+- **Ingress:** Traefik (`alertmanager.mosher-labs.local`)
+- **External URL:** Set explicitly to the Ingress host so links in Slack
+  notifications (and the AlertManager UI itself) resolve outside the
+  cluster instead of defaulting to the internal Service DNS name
 
 ## k3s Compatibility
 
