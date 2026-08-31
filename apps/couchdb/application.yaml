@@ -71,6 +71,9 @@ spec:
 
           couchdbConfig:
             couchdb:
+              # Required by this chart version - just a unique instance
+              # identifier, not a secret. Generated once with uuidgen.
+              uuid: db4a6025e6b5450ab4eb90c63adbf7ba
               # Default (~4MB) is too small for image-heavy notes; matches
               # obsidian-livesync's documented recommendation.
               max_document_size: 50000000
