@@ -129,6 +129,14 @@ Each app directory contains:
 - **TP-Link Sync** (custom): Syncs TP-Link device names to Git - CronJob: Periodic
   sync, Python script with UniFi and GitHub integration
 
+- **CouchDB** (chart v4.6.3 / CouchDB 3.5.1): Sync backend for the personal
+  Obsidian vault (`obsidian-livesync` plugin), clusterSize: 1. No inbound
+  port opened - `cloudflared` sidecar dials out to Cloudflare, gated by a
+  Cloudflare Access application in front of the tunnel hostname. Admin
+  credentials generated + sealed, stored in 1Password ("Mosher Home" vault,
+  "CouchDB - obsidian-sync (Mosher Labs)"). See `apps/couchdb/RUNBOOK.md`
+  for the Tunnel/Access setup and troubleshooting.
+
 ## Smart Home Device Context
 
 ### TP-Link Kasa Devices (192.168.3.x network)

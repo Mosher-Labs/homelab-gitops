@@ -1,0 +1,11 @@
+---
+# The cloudflared tunnel-token sealed secret goes in this directory
+# too, once created — see RUNBOOK.md. Until it's added, the
+# cloudflared sidecar container in the CouchDB pod will fail to
+# start (CouchDB itself will still come up fine).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: couchdb
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"

@@ -1,0 +1,144 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: couchdb
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace, sealed admin credentials, sealed cloudflared tunnel token,
+    # and the default-deny NetworkPolicy (deployed first via sync waves).
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/couchdb/manifests
+
+    # Official Apache CouchDB Helm chart.
+    - repoURL: https://apache.github.io/couchdb-helm
+      chart: couchdb
+      targetRevision: 4.6.3
+      helm:
+        releaseName: couchdb
+        valuesObject:
+          # Single-user vault sync backend — one node is plenty, and a
+          # 3-node CouchDB cluster would eat all three of our k3s nodes
+          # for a database serving one person's notes.
+          clusterSize: 1
+
+          allowAdminParty: false
+          createAdminSecret: false
+          extraSecretName: couchdb-admin-credentials
+
+          persistentVolume:
+            enabled: true
+            size: 10Gi
+            accessModes:
+              - ReadWriteOnce
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          # Finalizes the single node into a "cluster" and creates the
+          # system DBs obsidian-livesync expects to already exist.
+          autoSetup:
+            enabled: true
+            defaultDatabases:
+              - _global_changes
+              - _replicator
+              - _users
+
+          # Disable the chart's own NetworkPolicy (meant for multi-node
+          # clustering traffic we don't have) in favor of the stricter
+          # default-deny one in manifests/networkpolicy.yaml.
+          networkPolicy:
+            enabled: false
+
+          # No Service/Ingress exposure at all — the only way in is
+          # through the cloudflared sidecar below, which reaches CouchDB
+          # over localhost inside the same pod. Nothing else in the
+          # cluster can reach port 5984 (see manifests/networkpolicy.yaml).
+          service:
+            type: ClusterIP
+          ingress:
+            enabled: false
+
+          couchdbConfig:
+            couchdb:
+              # Default (~4MB) is too small for image-heavy notes; matches
+              # obsidian-livesync's documented recommendation.
+              max_document_size: 50000000
+            chttpd:
+              bind_address: any
+              # No anonymous HTTP access at all, even to _all_dbs/_up —
+              # Cloudflare Access is the primary gate, this is defense
+              # in depth in case the tunnel or Access policy is ever
+              # misconfigured.
+              require_valid_user: true
+              max_http_request_size: 4294967296
+              enable_cors: true
+            chttpd_auth:
+              require_valid_user: true
+            httpd:
+              WWW-Authenticate: 'Basic realm="couchdb"'
+            cors:
+              credentials: "true"
+              # Obsidian's Electron/Capacitor origins —
+              # obsidian-livesync's own "Check and Fix CouchDB
+              # configuration" wizard can adjust these later if a
+              # device needs an origin not listed here.
+              origins: >-
+                app://obsidian.md,capacitor://localhost,http://localhost
+              methods: "GET,PUT,POST,HEAD,DELETE"
+              headers: "accept,authorization,content-type,origin,referer"
+
+          # cloudflared runs as a sidecar in the same pod as CouchDB,
+          # same pattern as apps/book-review-publisher. It only makes
+          # outbound connections to Cloudflare's edge — no inbound port
+          # is ever opened on the homelab network, which is what makes
+          # this immune to direct-IP DDoS/scanning.
+          sidecars:
+            - name: cloudflared
+              image: cloudflare/cloudflared:2026.7.2
+              args:
+                - tunnel
+                - --no-autoupdate
+                - run
+                - --token
+                - $(CF_TOKEN)
+              env:
+                - name: CF_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudflared-credentials
+                      key: tunnel-token
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+                requests:
+                  cpu: 25m
+                  memory: 32Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: couchdb
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
