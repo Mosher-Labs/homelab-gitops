@@ -1,0 +1,21 @@
+---
+# Default-deny ingress for the CouchDB pod. Nothing else in the
+# cluster needs to reach CouchDB directly — the cloudflared sidecar
+# in the same pod talks to it over localhost:5984, which bypasses
+# Service networking entirely and isn't affected by this policy.
+# This intentionally replaces the chart's own networkPolicy
+# (disabled via networkPolicy.enabled: false in application.yaml)
+# since that one is designed for multi-node clustering traffic we
+# don't have at clusterSize: 1.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: couchdb-deny-ingress
+  namespace: couchdb
+spec:
+  podSelector:
+    matchLabels:
+      app: couchdb
+  policyTypes:
+    - Ingress
+  ingress: []
