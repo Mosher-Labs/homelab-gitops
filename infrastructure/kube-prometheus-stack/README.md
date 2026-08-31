@@ -46,6 +46,18 @@ Complete Kubernetes monitoring stack including:
   notifications (and the AlertManager UI itself) resolve outside the
   cluster instead of defaulting to the internal Service DNS name
 
+### Prometheus Operator Admission Webhooks
+
+- **Mode:** Persistent webhook deployment
+  (`admissionWebhooks.deployment.enabled: true`) instead of the chart's
+  default Job-based cert-patch hooks (`admissionWebhooks.patch.enabled:
+  false`)
+- **Why:** The Job-based hooks share RBAC across Helm's pre/post-install
+  hook phases with a `hook-succeeded` delete policy. ArgoCD deletes that
+  RBAC after the PreSync phase, so the PostSync phase then fails looking
+  for resources that are already gone. The persistent deployment manages
+  its own TLS natively and avoids Job-based hooks entirely.
+
 ## k3s Compatibility
 
 The following components are **disabled** because k3s doesn't expose them:
