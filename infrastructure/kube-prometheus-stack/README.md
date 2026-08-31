@@ -48,15 +48,23 @@ Complete Kubernetes monitoring stack including:
 
 ### Prometheus Operator Admission Webhooks
 
-- **Mode:** Persistent webhook deployment
-  (`admissionWebhooks.deployment.enabled: true`) instead of the chart's
-  default Job-based cert-patch hooks (`admissionWebhooks.patch.enabled:
-  false`)
-- **Why:** The Job-based hooks share RBAC across Helm's pre/post-install
-  hook phases with a `hook-succeeded` delete policy. ArgoCD deletes that
-  RBAC after the PreSync phase, so the PostSync phase then fails looking
-  for resources that are already gone. The persistent deployment manages
-  its own TLS natively and avoids Job-based hooks entirely.
+- **Mode:** Chart default (Job-based cert-create/cert-patch hooks)
+- **Known issue:** On ArgoCD, these Job hooks share RBAC across Helm's
+  pre/post-install hook phases with a `hook-succeeded` delete policy.
+  ArgoCD deletes that RBAC after the PreSync phase, so the PostSync
+  phase reports it as "missing" and the sync operation shows
+  Failed/retrying. This is cosmetic — the Jobs themselves complete
+  successfully and the app converges to Synced/Healthy within a
+  couple of ArgoCD retries.
+- **Do not switch to `admissionWebhooks.deployment.enabled: true`**
+  without first installing cert-manager and setting
+  `admissionWebhooks.certManager.enabled: true`. The persistent
+  webhook deployment needs cert-manager to issue a certificate valid
+  for the separate `*-operator-webhook` service; without it the
+  webhook serves a certificate scoped to the wrong service name and
+  the apiserver rejects it outright (all `PrometheusRule`
+  create/update calls fail TLS verification). This was tried and
+  reverted — see git history for `infrastructure/kube-prometheus-stack`.
 
 ## k3s Compatibility
 
