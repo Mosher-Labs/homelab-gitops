@@ -23,8 +23,9 @@ argo-cd:
     # ArgoCD from generating manifests for any app it hadn't already cached).
     # Revert to the chart default alongside `replicas` above once
     # macmini-2010 is back and redis-ha has real replicas again.
-    config:
-      min-replicas-to-write: 0
+    redis:
+      config:
+        min-replicas-to-write: 0
     haproxy:
       enabled: true
       replicas: 1
