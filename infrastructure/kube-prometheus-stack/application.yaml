@@ -23,7 +23,7 @@ spec:
     # Helm chart source
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
-      targetRevision: 88.6.1
+      targetRevision: 89.2.2
       helm:
         valuesObject:
           # Prometheus Operator Configuration
