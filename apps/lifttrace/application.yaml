@@ -1,0 +1,148 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lifttrace
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace, sealed JWT secret, sealed cloudflared tunnel token, and
+    # the default-deny NetworkPolicy (deployed first via sync waves).
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/lifttrace/manifests
+
+    # bjw-s app-template — LiftTrace has no official Helm chart, this is
+    # the well-maintained generic chart used for single-container apps
+    # without one (same reasoning as Homebridge, but templated instead
+    # of hand-written manifests).
+    - repoURL: ghcr.io/bjw-s-labs/helm/app-template
+      targetRevision: 5.2.1
+      helm:
+        releaseName: lifttrace
+        valuesObject:
+          controllers:
+            lifttrace:
+              type: deployment
+              containers:
+                app:
+                  image:
+                    repository: ghcr.io/traceapps/lifttrace
+                    # Pinned exact (Renovate bumps this via PR, same as
+                    # every other image in this repo) rather than
+                    # :latest — see docs/DEPLOY.md's tagging guidance
+                    # upstream.
+                    tag: "1.3.0"
+                  env:
+                    TZ: America/Denver
+                    DB_PATH: /data/db/lifttrace.db
+                    UPLOADS_PATH: /data/uploads
+                    # MCP_ENABLED / PUBLIC_API_ENABLED / WEBHOOKS_ENABLED
+                    # exist upstream but are intentionally left off for
+                    # this first pass — turn them on once the app itself
+                    # has been used for a while and a specific
+                    # integration (Claude/MCP, Obsidian sync, Strava) is
+                    # actually being built.
+                  envFrom:
+                    - secretRef:
+                        # JWT_SECRET — required for the server to start
+                        # in production. See
+                        # manifests/lifttrace-sealed-secret.yaml.
+                        name: lifttrace-secrets
+                  probes:
+                    liveness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /
+                          port: 3002
+                        initialDelaySeconds: 20
+                        periodSeconds: 30
+                    readiness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /
+                          port: 3002
+                        initialDelaySeconds: 10
+                        periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 256Mi
+                    limits:
+                      cpu: "1"
+                      memory: 1Gi
+
+                # cloudflared runs as a sidecar in the same pod as
+                # LiftTrace, same pattern as apps/couchdb. It only makes
+                # outbound connections to Cloudflare's edge — no inbound
+                # port is ever opened on the homelab network.
+                cloudflared:
+                  image:
+                    repository: cloudflare/cloudflared
+                    tag: 2026.7.2
+                  args:
+                    - tunnel
+                    - --no-autoupdate
+                    - run
+                    - --token
+                    - $(CF_TOKEN)
+                  env:
+                    CF_TOKEN:
+                      valueFrom:
+                        secretKeyRef:
+                          name: cloudflared-credentials
+                          key: tunnel-token
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 32Mi
+                    limits:
+                      cpu: 100m
+                      memory: 64Mi
+
+          # No Service/Ingress at all — same lockdown posture as
+          # apps/couchdb. cloudflared reaches the app over
+          # localhost:3002 inside the shared pod; nothing else in the
+          # cluster has (or needs) a path in. See manifests/networkpolicy.yaml.
+
+          persistence:
+            db:
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              size: 2Gi
+              advancedMounts:
+                lifttrace:
+                  app:
+                    - path: /data/db
+            uploads:
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              size: 10Gi
+              advancedMounts:
+                lifttrace:
+                  app:
+                    - path: /data/uploads
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lifttrace
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

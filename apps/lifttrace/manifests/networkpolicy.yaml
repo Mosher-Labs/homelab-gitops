@@ -1,0 +1,19 @@
+---
+# Default-deny ingress for the LiftTrace pod. Nothing else in the cluster
+# needs to reach LiftTrace directly — the cloudflared sidecar in the same
+# pod talks to it over localhost:3002, which bypasses Service networking
+# entirely (there is no Service at all for this app) and isn't affected by
+# this policy. Same pattern as apps/couchdb.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lifttrace-deny-ingress
+  namespace: lifttrace
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: lifttrace
+      app.kubernetes.io/instance: lifttrace
+  policyTypes:
+    - Ingress
+  ingress: []
