@@ -84,7 +84,7 @@ kubectl logs -f job/tplink-sync-manual-test -n tplink-sync
 
 ## How It Works
 
-```
+```text
 Every day @ 2 AM
      ↓
 CronJob runs in K8s cluster
