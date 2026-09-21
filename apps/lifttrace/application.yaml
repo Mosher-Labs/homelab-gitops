@@ -19,7 +19,8 @@ spec:
     # the well-maintained generic chart used for single-container apps
     # without one (same reasoning as Homebridge, but templated instead
     # of hand-written manifests).
-    - repoURL: ghcr.io/bjw-s-labs/helm/app-template
+    - repoURL: ghcr.io/bjw-s-labs/helm
+      chart: app-template
       targetRevision: 5.2.1
       helm:
         releaseName: lifttrace
