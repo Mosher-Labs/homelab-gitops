@@ -19,16 +19,21 @@ State lives in **this cluster**, as a Kubernetes Secret (`backend
 "kubernetes"` in `providers.tf`) — not Terraform Cloud, not committed to
 git. No new account, no cost.
 
-### One-time setup: the state namespace
+### The state namespace
 
-```bash
-kubectl create namespace terraform-state
-```
+`manifests/namespace.yaml` + `application.yaml` provision the
+`terraform-state` namespace via ArgoCD, same as every other app in this
+repo — merging this PR is enough, no manual `kubectl create namespace`
+step.
 
-This namespace is deliberately **not** an ArgoCD-managed resource and
-should never become one — don't add it to any `Application`'s tracked
-paths. ArgoCD's `prune: true` would treat the state Secret as an
-unmanaged resource to clean up, which would destroy this stack's state.
+This is safe to prune-manage even though Terraform's `kubernetes`
+backend later writes a state Secret directly into that namespace: ArgoCD
+only prunes resources it *created itself* (tracked via its own ownership
+label). The Terraform state Secret is created straight through the
+Kubernetes API, was never declared in git, and so never carries that
+label — `cloudflare-tunnels-state`'s prune pass can't see it, let alone
+delete it. Same reason ArgoCD already coexists safely with
+sealed-secrets-decrypted Secrets living in every other app's namespace.
 
 ## Credentials
 
@@ -53,6 +58,10 @@ with three fields:
 - `allowed-emails` — comma-separated list, e.g. `you@example.com`.
 
 ### Running Terraform
+
+Merge this PR first and confirm ArgoCD has synced the `terraform-state`
+namespace (`kubectl get namespace terraform-state`) before `terraform
+init` — the `kubernetes` backend needs it to already exist.
 
 ```bash
 export TF_VAR_cloudflare_api_token="$(op read 'op://Mosher Home/Cloudflare Tunnels - Terraform (Mosher Labs)/api-token')"
@@ -105,7 +114,8 @@ from this repo separately.
 ### `terraform init` fails to reach the state backend
 
 Confirm `~/k3s.yaml` is valid and the `terraform-state` namespace exists
-(one-time setup above).
+(`kubectl get namespace terraform-state`) — check that this PR merged
+and `cloudflare-tunnels-state` synced in ArgoCD if not.
 
 ### `apply` fails with a 403 / authorization error
 
