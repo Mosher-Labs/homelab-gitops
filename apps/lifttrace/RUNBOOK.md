@@ -42,36 +42,28 @@ inbound port is ever opened on the homelab network — the only path in is a
 
 ## Initial deployment
 
-### 1. Create the Cloudflare Tunnel
+### 1. Provision the Tunnel + Access application
 
-In the Cloudflare Zero Trust dashboard → Networks → Tunnels:
+The Tunnel, its ingress config, the DNS record, and the Access application
+are all provisioned by Terraform now — see
+`infrastructure/cloudflare-tunnels/`, not the Zero Trust dashboard.
+`lifttrace` is already an entry in that stack's `local.tunnel_apps`.
 
-1. Create a tunnel named `lifttrace`, connector type **Cloudflare**.
-1. Copy the tunnel token shown during setup — you'll seal it in step 3.
-1. Under **Public Hostname**, add:
-   - Subdomain: `lifttrace`, domain: your zone (e.g. `benniemosher.dev`)
-   - Service: `HTTP` → `localhost:3002` (cloudflared talks to LiftTrace over
-     loopback inside the pod, so from cloudflared's point of view LiftTrace
-     is always local)
+```bash
+cd infrastructure/cloudflare-tunnels
+terraform apply
+terraform output -json tunnel_tokens | jq -r '.lifttrace'
+```
 
-### 2. Create a Cloudflare Access application
+Full setup (1Password credentials, the one-time state namespace, adding
+further apps) is in `infrastructure/cloudflare-tunnels/RUNBOOK.md`.
 
-In Zero Trust → Access → Applications → Add an application → **Self-hosted**:
-
-1. Application domain: the same `lifttrace.<zone>` hostname from step 1.
-1. Policy: Allow, include rule = your email (Emails).
-1. Session duration: whatever you're comfortable re-authenticating against at
-   the gym — LiftTrace's own login sits behind this, so a short Access
-   session just means logging into Access again, not losing app state.
-1. Under the zone's **Security → Bots**, enable **Bot Fight Mode** (free) if
-   not already on for the zone.
-
-### 3. Seal the tunnel token
+### 2. Seal the tunnel token
 
 ```bash
 kubectl create secret generic cloudflared-credentials \
   --namespace lifttrace \
-  --from-literal=tunnel-token=YOUR_TUNNEL_TOKEN_HERE \
+  --from-literal=tunnel-token=<token from step 1> \
   --dry-run=client -o yaml | \
 kubeseal \
   --controller-namespace kube-system \
@@ -84,11 +76,11 @@ Commit `manifests/cloudflared-sealed-secret.yaml` — it's safe to store in
 git, same as the JWT secret. Until this exists, the `cloudflared` container
 will crashloop (see Troubleshooting) while `app` runs fine.
 
-### 4. Merge this PR
+### 3. Merge this PR
 
 ArgoCD syncs automatically once merged to `main`.
 
-### 5. Verify deployment
+### 4. Verify deployment
 
 ```bash
 kubectl get pods -n lifttrace
@@ -99,7 +91,7 @@ kubectl logs -n lifttrace -l app.kubernetes.io/name=lifttrace -c cloudflared
 Then hit `https://lifttrace.<zone>` in a browser — Access will prompt for
 login first, then you should land on LiftTrace's first-run setup wizard.
 
-### 6. First run
+### 5. First run
 
 1. Create your account — first account created is automatically admin.
 1. **Single-user mode:** if you never create a second user, LiftTrace itself
@@ -157,7 +149,7 @@ kubectl describe pod -n lifttrace -l app.kubernetes.io/name=lifttrace
 ```
 
 Common cause: `cloudflared-credentials` sealed secret not created yet
-(step 3) — the `app` container will still be `Running`, only `cloudflared`
+(step 2) — the `app` container will still be `Running`, only `cloudflared`
 restarts.
 
 ### Devices can't reach the hostname at all
