@@ -24,7 +24,7 @@ principles using ArgoCD.
 
 ## 📁 Repository Structure
 
-```
+```text
 homelab-gitops/
 ├── bootstrap/          # ArgoCD installation and self-management
 │   └── argocd/
@@ -47,7 +47,7 @@ homelab-gitops/
 ## 📊 Applications
 
 | App | Purpose | Status |
-|-----|---------|--------|
+| ----- | --------- | -------- |
 | ArgoCD | GitOps CD tool | ✅ Active |
 | hello-world | Testing | 🚧 In Progress |
 | PiHole | DNS/Ad-blocking | 📋 Planned |

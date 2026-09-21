@@ -80,7 +80,7 @@ Example: See `apps/pihole/application.yaml`
 
 ## Repository Structure
 
-```
+```text
 homelab-gitops/
 ├── bootstrap/argocd/        # ArgoCD self-management
 ├── infrastructure/          # Core cluster services
@@ -392,7 +392,7 @@ While Kubernetes allows `---` separators, the linter requires separate files.
 
 **Example:**
 
-```
+```text
 apps/pihole/manifests/
 ├── sealed-secret.yaml           # One SealedSecret
 ├── pihole-exporter-deployment.yaml    # One Deployment

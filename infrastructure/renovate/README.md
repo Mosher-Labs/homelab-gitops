@@ -12,10 +12,10 @@ updates across multiple GitHub organizations.
 
 ## Current Organizations
 
-| Organization | CronJob | Schedule | Installation ID Key |
-|--------------|---------|----------|---------------------|
-| Mosher-Labs | `renovate-mosher-labs` | 2:00 AM | `installation-id-mosher-labs` |
-| acebackapp | `renovate-acebackapp` | 2:15 AM | `installation-id-acebackapp` |
+| Organization | CronJob                | Schedule | Installation ID Key           |
+|--------------|------------------------|----------|-------------------------------|
+| Mosher-Labs  | `renovate-mosher-labs` | 2:00 AM  | `installation-id-mosher-labs` |
+| acebackapp   | `renovate-acebackapp`  | 2:15 AM  | `installation-id-acebackapp`  |
 
 ## Quick Start
 
