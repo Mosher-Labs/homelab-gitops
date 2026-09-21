@@ -15,7 +15,12 @@ inbound port is ever opened on the homelab network — the only path in is a
 - **Public URL:** `https://lifttrace.benniemosher.dev` (adjust to your
   actual zone/subdomain choice)
 - **Chart:** `bjw-s-labs/app-template` v5.2.1 wrapping
-  `ghcr.io/traceapps/lifttrace:1.3.0`
+  `ghcr.io/benniemosher/lifttrace:mosher-labs-f7048b0` — TEMPORARY custom
+  build (upstream v1.3.1 dev branch + two of our PRs not merged upstream
+  yet: [TraceApps/lifttrace#114](https://github.com/TraceApps/lifttrace/pull/114),
+  [#115](https://github.com/TraceApps/lifttrace/pull/115)). Source:
+  `benniemosher/lifttrace`, branch `local/mosher-labs-build`. Revert to
+  `ghcr.io/traceapps/lifttrace` once both land in an upstream release.
 - **Auth:** LiftTrace's own login (first account created on first run becomes
   admin). Cloudflare Access in front of the tunnel hostname is the primary
   gate — see below.
