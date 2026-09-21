@@ -31,22 +31,28 @@ spec:
               containers:
                 app:
                   image:
-                    repository: ghcr.io/traceapps/lifttrace
-                    # TEMPORARY: DEPLOY.md documents semver tags
-                    # (1.3.0/1.3/1) but as of the v1.3.1 GitHub release,
-                    # GHCR still only has :latest and :dev published
-                    # (confirmed directly against the registry API) -
-                    # :1.3.1/:1.3/:1 all 404. Pin back to an exact tag
-                    # (matches every other image in this repo,
-                    # Renovate-tracked) once upstream's image publish
-                    # catches up to the release.
-                    tag: latest
+                    # TEMPORARY: our own build, not upstream. Built from
+                    # TraceApps/lifttrace's dev branch (v1.3.1) plus two
+                    # of our own PRs not merged upstream yet:
+                    #   - TraceApps/lifttrace#114 (bottom nav pill
+                    #     hardcoded orange instead of --accent-2)
+                    #   - TraceApps/lifttrace#115 (cardio-only days
+                    #     didn't light up the streak/week-strip)
+                    # Source + Dockerfile: benniemosher/lifttrace,
+                    # branch local/mosher-labs-build (commit f7048b0).
+                    # Public GHCR package under the same account. Revert
+                    # to ghcr.io/traceapps/lifttrace once both PRs land
+                    # upstream and are in a release.
+                    repository: ghcr.io/benniemosher/lifttrace
+                    tag: mosher-labs-f7048b0
                     # Required for :latest to actually mean latest — a
                     # rollout restart previously reused an already-
                     # cached local image instead of re-pulling, so a
                     # newer :latest sitting in the registry (e.g. the
                     # v1.3.1 bump) silently never reached the running
-                    # pod without this.
+                    # pod without this. Kept even though this tag is now
+                    # pinned to a specific sha, for when a future custom
+                    # build reuses the same floating :mosher-labs tag.
                     pullPolicy: Always
                   env:
                     TZ: America/Denver

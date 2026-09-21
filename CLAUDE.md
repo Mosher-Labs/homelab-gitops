@@ -138,14 +138,24 @@ Each app directory contains:
   for the Tunnel/Access setup and troubleshooting.
 
 - **LiftTrace** (`bjw-s-labs/app-template` chart v5.2.1 /
-  `ghcr.io/traceapps/lifttrace:1.3.0`): Self-hosted weight training tracker,
-  SQLite-backed, no telemetry. Same lockdown pattern as CouchDB - `cloudflared`
-  sidecar, no Service/Ingress, Cloudflare Access gates the tunnel hostname
-  `lifttrace.benniemosher.dev`. `JWT_SECRET` generated + sealed
-  (`apps/lifttrace/manifests/lifttrace-sealed-secret.yaml`). MCP/Public
-  API/Webhooks support exists upstream but is intentionally left disabled
-  until there's an actual consumer for it (Strava export, Obsidian sync).
-  See `apps/lifttrace/RUNBOOK.md` for Tunnel/Access setup and troubleshooting.
+  `ghcr.io/benniemosher/lifttrace:mosher-labs-f7048b0`): Self-hosted weight
+  training tracker, SQLite-backed, no telemetry. TEMPORARY custom image —
+  upstream v1.3.1 (dev branch) plus two of our own PRs not merged upstream
+  yet ([TraceApps/lifttrace#114](https://github.com/TraceApps/lifttrace/pull/114),
+  [#115](https://github.com/TraceApps/lifttrace/pull/115)). Source:
+  `benniemosher/lifttrace`, branch `local/mosher-labs-build`, public GHCR
+  package under the same account. Revert to `ghcr.io/traceapps/lifttrace`
+  once both land in an upstream release. Same lockdown pattern as CouchDB -
+  `cloudflared` sidecar, no Service/Ingress, Cloudflare Access gates the
+  tunnel hostname `lifttrace.benniemosher.dev` (with a path-scoped bypass
+  for `/api/mcp` so Claude's connector can reach it — Access still gates
+  everything else). `JWT_SECRET` generated + sealed
+  (`apps/lifttrace/manifests/lifttrace-sealed-secret.yaml`). MCP and
+  outgoing webhooks are both enabled (`MCP_ENABLED`, `WEBHOOKS_ENABLED`) —
+  webhooks feed `lifttrace-strava-sync`, a separate Cloudflare Worker that
+  posts completed workouts to Strava. `PUBLIC_API_ENABLED` stays off; MCP
+  covers the only outside consumer so far. See `apps/lifttrace/RUNBOOK.md`
+  for Tunnel/Access setup and troubleshooting.
 
 ## Smart Home Device Context
 
