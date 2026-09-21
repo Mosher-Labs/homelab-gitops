@@ -105,26 +105,31 @@ login first, then you should land on LiftTrace's first-run setup wizard.
    from Android," Path 2). Enter `https://lifttrace.<zone>` in the app's
    setup wizard.
 
-## Future integration toggles (not enabled yet)
+## Integration toggles
 
-LiftTrace ships several env-gated features that are relevant to later
-work but are deliberately **off** in this first deployment — the plan is to
-actually use the app for a while before deciding what's worth wiring up:
+- **`MCP_ENABLED=1`** (on) — exposes an MCP endpoint at `/api/mcp` for
+  Claude Desktop/mobile/Cursor/Codex to read workout history through.
+  `MCP_WRITE_ENABLED` / `MCP_DESTROY_ENABLED` stay **off** — Claude reads
+  history to help plan the next session, doesn't log sets back (each
+  token's own scopes are the real gate; these are just the server-wide
+  ceiling on top of them).
 
-- `MCP_ENABLED=1` — exposes an MCP endpoint at `/api/mcp` for Claude
-  Desktop/Cursor/Codex. `MCP_WRITE_ENABLED` / `MCP_DESTROY_ENABLED` gate
-  write/delete tools separately.
-- `PUBLIC_API_ENABLED=1` — versioned REST API at `/api/v1` for scripts,
-  using the same token scopes as MCP. `PUBLIC_API_WRITE_ENABLED` gates
-  writes.
-- `WEBHOOKS_ENABLED=1` — outgoing webhooks (workout completed, PR set,
-  program advanced, body stat logged), configured in Settings → Webhooks.
-  This is the natural hook point for a future Strava-export relay or an
-  Obsidian-note-generation job, without needing to fork or patch LiftTrace
-  itself.
+  To connect Claude: Settings → API Tokens → new token, scope
+  `mcp:read` only. In Claude's own settings (claude.ai or the app) →
+  Connectors → add a custom connector, URL `https://lifttrace.<zone>/api/mcp`,
+  paste the token. Token is shown once — save it somewhere (1Password)
+  before closing the dialog.
 
-Add these to the `env:` block in `application.yaml` when there's an actual
-consumer for them.
+- **`WEBHOOKS_ENABLED=1`** (on) — outgoing webhooks (workout completed,
+  PR set, program advanced, body stat logged), configured in
+  Settings → Webhooks. No webhook is configured yet — this just makes
+  the feature available. Intended hook point for a future Strava-export
+  relay (LiftTrace has no native Strava integration — checked upstream
+  source directly, nothing there — a webhook + a small relay we'd build
+  ourselves is the only path).
+
+- **`PUBLIC_API_ENABLED`** — still off. MCP covers the Claude use case;
+  nothing else needs the plain REST API yet.
 
 ## Backups
 
