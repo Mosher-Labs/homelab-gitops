@@ -32,11 +32,15 @@ spec:
                 app:
                   image:
                     repository: ghcr.io/traceapps/lifttrace
-                    # Pinned exact (Renovate bumps this via PR, same as
-                    # every other image in this repo) rather than
-                    # :latest — see docs/DEPLOY.md's tagging guidance
-                    # upstream.
-                    tag: "1.3.0"
+                    # TEMPORARY: DEPLOY.md documents semver tags
+                    # (1.3.0/1.3/1) but as of the v1.3.0 GitHub release,
+                    # GHCR only actually has :latest and :dev published
+                    # (confirmed directly against the registry API) -
+                    # :1.3.0 404s. Pin back to an exact tag (matches
+                    # every other image in this repo, Renovate-tracked)
+                    # once upstream's image publish catches up to the
+                    # release.
+                    tag: latest
                   env:
                     TZ: America/Denver
                     DB_PATH: /data/db/lifttrace.db
