@@ -33,14 +33,21 @@ spec:
                   image:
                     repository: ghcr.io/traceapps/lifttrace
                     # TEMPORARY: DEPLOY.md documents semver tags
-                    # (1.3.0/1.3/1) but as of the v1.3.0 GitHub release,
-                    # GHCR only actually has :latest and :dev published
+                    # (1.3.0/1.3/1) but as of the v1.3.1 GitHub release,
+                    # GHCR still only has :latest and :dev published
                     # (confirmed directly against the registry API) -
-                    # :1.3.0 404s. Pin back to an exact tag (matches
-                    # every other image in this repo, Renovate-tracked)
-                    # once upstream's image publish catches up to the
-                    # release.
+                    # :1.3.1/:1.3/:1 all 404. Pin back to an exact tag
+                    # (matches every other image in this repo,
+                    # Renovate-tracked) once upstream's image publish
+                    # catches up to the release.
                     tag: latest
+                    # Required for :latest to actually mean latest — a
+                    # rollout restart previously reused an already-
+                    # cached local image instead of re-pulling, so a
+                    # newer :latest sitting in the registry (e.g. the
+                    # v1.3.1 bump) silently never reached the running
+                    # pod without this.
+                    pullPolicy: Always
                   env:
                     TZ: America/Denver
                     DB_PATH: /data/db/lifttrace.db
