@@ -1,0 +1,11 @@
+---
+# Holds nothing but the Terraform kubernetes-backend state Secret for
+# this stack (providers.tf). That Secret is created directly by
+# Terraform via the Kubernetes API, never declared in git, so it has no
+# ArgoCD ownership label and this Application's prune never sees or
+# touches it — same reason ArgoCD already coexists safely with
+# sealed-secrets-decrypted Secrets in every other app namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: terraform-state
