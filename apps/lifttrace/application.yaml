@@ -45,12 +45,20 @@ spec:
                     TZ: America/Denver
                     DB_PATH: /data/db/lifttrace.db
                     UPLOADS_PATH: /data/uploads
-                    # MCP_ENABLED / PUBLIC_API_ENABLED / WEBHOOKS_ENABLED
-                    # exist upstream but are intentionally left off for
-                    # this first pass — turn them on once the app itself
-                    # has been used for a while and a specific
-                    # integration (Claude/MCP, Obsidian sync, Strava) is
-                    # actually being built.
+                    # Read-only MCP — Claude reads real workout history
+                    # to plan the next session, doesn't log sets back.
+                    # Flip MCP_WRITE_ENABLED on later if that changes;
+                    # each token's own scopes (minted in Settings) are
+                    # the actual write gate, this is just the ceiling.
+                    MCP_ENABLED: "1"
+                    # Outgoing webhooks (workout completed, etc.) —
+                    # feeds the future Strava-export relay. No webhook
+                    # is configured yet; this just makes the feature
+                    # exist to configure in Settings.
+                    WEBHOOKS_ENABLED: "1"
+                    # PUBLIC_API_ENABLED still off — MCP covers the
+                    # Claude-integration use case; no other consumer
+                    # needs the plain REST API yet.
                   envFrom:
                     - secretRef:
                         # JWT_SECRET — required for the server to start
