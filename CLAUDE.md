@@ -137,6 +137,16 @@ Each app directory contains:
   "CouchDB - obsidian-sync (Mosher Labs)"). See `apps/couchdb/RUNBOOK.md`
   for the Tunnel/Access setup and troubleshooting.
 
+- **LiftTrace** (`bjw-s-labs/app-template` chart v5.2.1 /
+  `ghcr.io/traceapps/lifttrace:1.3.0`): Self-hosted weight training tracker,
+  SQLite-backed, no telemetry. Same lockdown pattern as CouchDB - `cloudflared`
+  sidecar, no Service/Ingress, Cloudflare Access gates the tunnel hostname
+  `lifttrace.benniemosher.dev`. `JWT_SECRET` generated + sealed
+  (`apps/lifttrace/manifests/lifttrace-sealed-secret.yaml`). MCP/Public
+  API/Webhooks support exists upstream but is intentionally left disabled
+  until there's an actual consumer for it (Strava export, Obsidian sync).
+  See `apps/lifttrace/RUNBOOK.md` for Tunnel/Access setup and troubleshooting.
+
 ## Smart Home Device Context
 
 ### TP-Link Kasa Devices (192.168.3.x network)
