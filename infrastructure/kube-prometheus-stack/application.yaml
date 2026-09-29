@@ -64,8 +64,12 @@ spec:
 
           # Grafana Configuration
           grafana:
-            # Admin credentials (change after first login!)
-            adminPassword: admin
+            # Admin credentials come from the grafana-admin SealedSecret in
+            # manifests/ (the password is the "Grafana" item in 1Password).
+            admin:
+              existingSecret: grafana-admin
+              userKey: admin-user
+              passwordKey: admin-password
             # Ingress for Grafana UI
             ingress:
               enabled: true

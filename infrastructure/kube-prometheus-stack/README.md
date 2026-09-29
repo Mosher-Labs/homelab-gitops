@@ -12,7 +12,8 @@ Complete Kubernetes monitoring stack including:
 ## Access
 
 - **Grafana UI:** `http://grafana.mosher-labs.local`
-- **Default Credentials:** admin / admin (change after first login!)
+- **Credentials:** user `admin`; the password is the "Grafana" item in 1Password,
+  deployed through the `grafana-admin` SealedSecret
 - **AlertManager UI:** `http://alertmanager.mosher-labs.local`
 
 ## Resource Usage
