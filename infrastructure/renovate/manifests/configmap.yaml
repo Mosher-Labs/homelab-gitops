@@ -11,7 +11,9 @@ data:
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "extends": [
         "config:recommended",
-        ":gitSignOff"
+        ":gitSignOff",
+        "helpers:pinGitHubActionDigests",
+        "docker:pinDigests"
       ],
       "platform": "github",
       "gitAuthor": "eikthyrnirbot[bot] <245716739+eikthyrnirbot[bot]@users.noreply.github.com>",
@@ -49,6 +51,22 @@ data:
         ]
       },
       "packageRules": [
+        {
+          "description": "Pinning to a digest or SHA changes nothing that runs, so merge it automatically",
+          "matchUpdateTypes": ["pin", "pinDigest"],
+          "automerge": true,
+          "automergeType": "pr"
+        },
+        {
+          "description": "Homebridge publishes date tags (YYYY-MM-DD); ignore the alpha-/beta-/synology- variants",
+          "matchPackageNames": ["homebridge/homebridge"],
+          "versioning": "regex:^(?<major>\\d{4})-(?<minor>\\d{2})-(?<patch>\\d{2})$"
+        },
+        {
+          "description": "iamfit: pin exact versions so lockfile-only bumps get unique PR titles and can automerge",
+          "matchRepositories": ["Mosher-Labs/iamfit"],
+          "rangeStrategy": "pin"
+        },
         {
           "description": "Disable Renovate for tidr (too memory intensive)",
           "matchRepositories": ["Mosher-Labs/tidr"],
@@ -170,6 +188,15 @@ data:
       "customManagers": [
         {
           "customType": "regex",
+          "description": "Update digest-pinned images used by local docker_image hooks in .pre-commit-config.yaml",
+          "fileMatch": ["(^|/)\\.pre-commit-config\\.ya?ml$"],
+          "matchStrings": [
+            "entry:\\s+(?<depName>[^\\s:@]+):(?<currentValue>[^\\s@]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+          ],
+          "datasourceTemplate": "docker"
+        },
+        {
+          "customType": "regex",
           "description": "Update _VERSION variables in Dockerfiles",
           "fileMatch": [
             "(^|/|\\.)Dockerfile$",
@@ -182,6 +209,9 @@ data:
             "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
         }
       ],
+      "pre-commit": {
+        "enabled": true
+      },
       "helm-values": {
         "fileMatch": [
           "values\\.ya?ml$",
