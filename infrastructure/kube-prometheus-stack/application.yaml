@@ -72,14 +72,16 @@ spec:
               ingressClassName: traefik
               hosts:
                 - grafana.mosher-labs.local
-            # Resource limits
+            # Resource limits. Grafana 13 runs an in-process API server; at
+            # 256Mi / 200m it sat at its memory limit, SQLite calls timed out,
+            # and failed health checks took it out of the Service.
             resources:
               limits:
-                cpu: 200m
-                memory: 256Mi
+                cpu: 1000m
+                memory: 768Mi
               requests:
                 cpu: 100m
-                memory: 128Mi
+                memory: 256Mi
             # Persistence
             persistence:
               enabled: true
