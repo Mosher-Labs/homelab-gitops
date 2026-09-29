@@ -142,3 +142,25 @@ spec:
               {{ $labels.instance }} is
               {{ $value | humanizePercentage }} full.
               Please free up space or expand the volume.
+
+        # A declared mount vanished from node-exporter output
+        - alert: NodeExpectedMountMissing
+          expr: |
+            absent(node_filesystem_size_bytes{
+              mountpoint="/var/lib/rancher/k3s/storage"})
+            or absent(node_filesystem_size_bytes{mountpoint="/data"})
+          for: 5m
+          labels:
+            severity: critical
+            component: storage
+          annotations:
+            summary: "Expected mount {{ $labels.mountpoint }} is missing"
+            description: |
+              No filesystem metrics exist for {{ $labels.mountpoint }}.
+              These volumes are mounted with nofail, so a node boots and
+              reports Ready without them and every threshold alert on the
+              mount goes quiet rather than firing.
+              For /var/lib/rancher/k3s/storage this silently removes the
+              cap on local-path PV growth and sends new PVs back to the
+              root disk.
+              Check findmnt and lvs on the node.

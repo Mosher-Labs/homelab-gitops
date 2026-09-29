@@ -172,6 +172,10 @@ spec:
             enabled: false
           kubeScheduler:
             enabled: false
+          # kube-proxy is built into the k3s agent, so absent(up{job=
+          # "kube-proxy"}) fires permanently and can never resolve.
+          kubeProxy:
+            enabled: false
 
           # Node exporter - collects node metrics
           nodeExporter:
