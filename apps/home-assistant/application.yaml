@@ -18,7 +18,7 @@ spec:
         # Image settings
         image:
           repository: ghcr.io/home-assistant/home-assistant
-          tag: stable
+          tag: 2026.9.4
           pullPolicy: Always
 
         # Enable host network for mDNS/Bonjour and local device discovery
