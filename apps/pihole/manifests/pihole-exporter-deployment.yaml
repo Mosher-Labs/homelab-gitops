@@ -39,7 +39,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: pihole-exporter
-          image: ghcr.io/mosher-labs/pihole6-exporter:latest@sha256:c3ff7cbafd4e687c4f903a6fded9137827f8d507f3abfdbe42d76c9737aa3bfb  # yamllint disable-line rule:line-length
+          image: ghcr.io/mosher-labs/pihole6-exporter:1.1.0@sha256:27223a0880618b633bcaaa7de9c721a5bd7ef2bdf5f8bc236de4680151a4d2c7  # yamllint disable-line rule:line-length
           imagePullPolicy: Always
           ports:
             - name: metrics
