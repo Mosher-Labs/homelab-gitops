@@ -62,7 +62,10 @@ spec:
                   key: password
           resources:
             limits:
-              cpu: 50m
+              # Peak observed CPU is 6m, but a 50m quota is only 5ms per
+              # 100ms CFS period, so scrape bursts throttled 21% of periods.
+              # Headroom, not capacity.
+              cpu: 200m
               memory: 128Mi
             requests:
               cpu: 25m
