@@ -10,3 +10,4 @@ rules:
       - apps/*/manifests/sealed-secret.yaml
       - apps/*/manifests/*-sealed-secret.yaml
       - infrastructure/*/manifests/sealed-secret.yaml
+      - infrastructure/*/manifests/*-sealed-secret.yaml
