@@ -32,7 +32,7 @@ data:
       "commitMessageTopic": "{{depName}}",
       "automerge": false,
       "platformAutomerge": true,
-      "rebaseWhen": "conflicted",
+      "rebaseWhen": "auto",
       "labels": [
         "dependencies",
         "renovate"
