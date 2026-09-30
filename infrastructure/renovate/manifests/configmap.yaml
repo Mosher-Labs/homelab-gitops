@@ -52,12 +52,6 @@ data:
       },
       "packageRules": [
         {
-          "description": "Pinning to a digest or SHA changes nothing that runs, so merge it automatically",
-          "matchUpdateTypes": ["pin", "pinDigest"],
-          "automerge": true,
-          "automergeType": "pr"
-        },
-        {
           "description": "Homebridge publishes date tags (YYYY-MM-DD); ignore the alpha-/beta-/synology- variants",
           "matchPackageNames": ["homebridge/homebridge"],
           "versioning": "regex:^(?<major>\\d{4})-(?<minor>\\d{2})-(?<patch>\\d{2})$"
@@ -174,6 +168,12 @@ data:
             "patch"
           ],
           "groupName": "Ruby dependencies"
+        },
+        {
+          "description": "Pinning to a digest or SHA changes nothing that runs, so merge it automatically. Keep last: later rules win, and the docker/helm rules set automerge false",
+          "matchUpdateTypes": ["pin", "pinDigest"],
+          "automerge": true,
+          "automergeType": "pr"
         }
       ],
       "customManagers": [
