@@ -40,6 +40,7 @@ data:
       "assignees": [
         "@benniemosher"
       ],
+      "assignAutomerge": true,
       "reviewers": [],
       "vulnerabilityAlerts": {
         "labels": [
@@ -168,6 +169,11 @@ data:
             "patch"
           ],
           "groupName": "Ruby dependencies"
+        },
+        {
+          "description": "Mosher-Labs/.github cuts a release on every merge; take its updates weekly. The CronJob runs 02:00 UTC Monday, which is Sunday evening in America/Denver",
+          "matchPackageNames": ["Mosher-Labs/.github"],
+          "schedule": ["on sunday"]
         },
         {
           "description": "Pinning to a digest or SHA changes nothing that runs, so merge it automatically. Keep last: later rules win, and the docker/helm rules set automerge false",
