@@ -33,6 +33,7 @@ data:
       "automerge": false,
       "platformAutomerge": true,
       "rebaseWhen": "auto",
+      "rangeStrategy": "pin",
       "labels": [
         "dependencies",
         "renovate"
@@ -56,16 +57,6 @@ data:
           "description": "Homebridge publishes date tags (YYYY-MM-DD); ignore the alpha-/beta-/synology- variants",
           "matchPackageNames": ["homebridge/homebridge"],
           "versioning": "regex:^(?<major>\\d{4})-(?<minor>\\d{2})-(?<patch>\\d{2})$"
-        },
-        {
-          "description": "iamfit: pin exact versions so lockfile-only bumps get unique PR titles and can automerge",
-          "matchRepositories": ["Mosher-Labs/iamfit"],
-          "rangeStrategy": "pin"
-        },
-        {
-          "description": "Disable Renovate for tidr (too memory intensive)",
-          "matchRepositories": ["Mosher-Labs/tidr"],
-          "enabled": false
         },
         {
           "description": "Group all non-major npm updates together",
@@ -176,6 +167,11 @@ data:
           "schedule": ["on sunday"]
         },
         {
+          "description": "Pin pre-commit hook revs to commit SHAs (rev: <sha>  # frozen: vX.Y.Z); there is no preset for this",
+          "matchManagers": ["pre-commit"],
+          "pinDigests": true
+        },
+        {
           "description": "Pinning to a digest or SHA changes nothing that runs, so merge it automatically. Keep last: later rules win, and the docker/helm rules set automerge false",
           "matchUpdateTypes": ["pin", "pinDigest"],
           "automerge": true,
@@ -183,6 +179,15 @@ data:
         }
       ],
       "customManagers": [
+        {
+          "customType": "regex",
+          "description": "Keep NODE_VERSION in netlify.toml in sync with .node-version",
+          "fileMatch": ["(^|/)netlify\\.toml$"],
+          "matchStrings": ["NODE_VERSION = \"(?<currentValue>[^\"]+)\""],
+          "depNameTemplate": "node",
+          "datasourceTemplate": "node-version",
+          "versioningTemplate": "node"
+        },
         {
           "customType": "regex",
           "description": "Update digest-pinned images used by local docker_image hooks in .pre-commit-config.yaml",
