@@ -126,8 +126,8 @@ data:
         },
         {
           "description": "Pre-commit hooks - major, minor, and patch",
-          "matchManagers": [
-            "pre-commit"
+          "matchFileNames": [
+            "**/.pre-commit-config.yaml"
           ],
           "matchUpdateTypes": [
             "major",
@@ -168,7 +168,7 @@ data:
         },
         {
           "description": "Pin pre-commit hook revs to commit SHAs (rev: <sha>  # frozen: vX.Y.Z); there is no preset for this",
-          "matchManagers": ["pre-commit"],
+          "matchFileNames": ["**/.pre-commit-config.yaml"],
           "pinDigests": true
         },
         {
@@ -179,6 +179,19 @@ data:
         }
       ],
       "customManagers": [
+        {
+          "customType": "regex",
+          "description": "Pre-commit hook revs, pinned to commit SHAs as rev: <sha>  # frozen: vX.Y.Z. Replaces the built-in pre-commit manager, which cannot write a pinned rev",
+          "fileMatch": ["(^|/)\\.pre-commit-config\\.ya?ml$"],
+          "matchStringsStrategy": "any",
+          "matchStrings": [
+            "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+\"?(?<currentValue>v?\\d[^\"\\s#]*)\"?[ \\t]*\\n",
+            "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+(?<currentDigest>[0-9a-f]{40})\\s+#\\s*frozen:\\s*(?<currentValue>\\S+)[ \\t]*\\n"
+          ],
+          "datasourceTemplate": "github-tags",
+          "depTypeTemplate": "pre-commit",
+          "autoReplaceStringTemplate": "- repo: https://github.com/{{{depName}}}\n{{{indentation}}}rev: {{#if newDigest}}{{{newDigest}}}  # frozen: {{{newValue}}}{{else}}{{{newValue}}}{{/if}}\n"
+        },
         {
           "customType": "regex",
           "description": "Keep NODE_VERSION in netlify.toml in sync with .node-version",
@@ -212,7 +225,7 @@ data:
         }
       ],
       "pre-commit": {
-        "enabled": true
+        "enabled": false
       },
       "helm-values": {
         "fileMatch": [
