@@ -127,11 +127,16 @@ login first, then you should land on LiftTrace's first-run setup wizard.
 
 - **`WEBHOOKS_ENABLED=1`** (on) — outgoing webhooks (workout completed,
   PR set, program advanced, body stat logged), configured in
-  Settings → Webhooks. No webhook is configured yet — this just makes
-  the feature available. Intended hook point for a future Strava-export
-  relay (LiftTrace has no native Strava integration — checked upstream
-  source directly, nothing there — a webhook + a small relay we'd build
-  ourselves is the only path).
+  Settings → Webhooks. One webhook is configured: `workout.completed` →
+  `https://lifttrace-strava-sync.benniemosher-dev.workers.dev/webhook`, the
+  [lifttrace-strava-sync](https://github.com/benniemosher/lifttrace-strava-sync)
+  Cloudflare Worker, which posts each completed workout to Strava as a
+  WeightTraining activity. LiftTrace has no native Strava integration, so
+  this Worker is the export path.
+
+  The other direction (Strava runs into LiftTrace) isn't automatic. Run
+  `strava activities --date <day>` then `strava lifttrace-import <id>` from
+  the dotfiles `strava` script, which logs the run as LiftTrace cardio.
 
 - **`PUBLIC_API_ENABLED`** — still off. MCP covers the Claude use case;
   nothing else needs the plain REST API yet.

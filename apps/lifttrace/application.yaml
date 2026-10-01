@@ -64,10 +64,9 @@ spec:
                     # each token's own scopes (minted in Settings) are
                     # the actual write gate, this is just the ceiling.
                     MCP_ENABLED: "1"
-                    # Outgoing webhooks (workout completed, etc.) —
-                    # feeds the future Strava-export relay. No webhook
-                    # is configured yet; this just makes the feature
-                    # exist to configure in Settings.
+                    # Outgoing webhooks (workout completed, etc.). A
+                    # workout.completed webhook feeds lifttrace-strava-sync,
+                    # which posts finished workouts to Strava. See RUNBOOK.md.
                     WEBHOOKS_ENABLED: "1"
                     # PUBLIC_API_ENABLED still off — MCP covers the
                     # Claude-integration use case; no other consumer
