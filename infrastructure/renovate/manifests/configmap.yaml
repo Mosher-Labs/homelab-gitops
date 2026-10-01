@@ -183,10 +183,8 @@ data:
           "customType": "regex",
           "description": "Pre-commit hook revs, pinned to commit SHAs as rev: <sha>  # frozen: vX.Y.Z. Replaces the built-in pre-commit manager, which cannot write a pinned rev",
           "fileMatch": ["(^|/)\\.pre-commit-config\\.ya?ml$"],
-          "matchStringsStrategy": "any",
           "matchStrings": [
-            "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+\"?(?<currentValue>v?\\d[^\"\\s#]*)\"?[ \\t]*\\n",
-            "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+(?<currentDigest>[0-9a-f]{40})\\s+#\\s*frozen:\\s*(?<currentValue>\\S+)[ \\t]*\\n"
+            "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+(?:(?<currentDigest>[0-9a-f]{40})\\s+#\\s*frozen:\\s*)?\"?(?<currentValue>v?\\d+\\.[^\"\\s#]*)\"?[ \\t]*\\n"
           ],
           "datasourceTemplate": "github-tags",
           "depTypeTemplate": "pre-commit",
