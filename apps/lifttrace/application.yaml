@@ -44,7 +44,7 @@ spec:
                     # to ghcr.io/traceapps/lifttrace once both PRs land
                     # upstream and are in a release.
                     repository: ghcr.io/benniemosher/lifttrace
-                    tag: mosher-labs-f7048b0
+                    tag: mosher-labs-f7048b0@sha256:a8be77b6425464943912899fa8a53e25b41ffc0efaf08ef2dfdde7fcd50bcf44
                     # Required for :latest to actually mean latest — a
                     # rollout restart previously reused an already-
                     # cached local image instead of re-pulling, so a
@@ -112,7 +112,7 @@ spec:
                 cloudflared:
                   image:
                     repository: cloudflare/cloudflared
-                    tag: 2026.9.3
+                    tag: 2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c
                   args:
                     - tunnel
                     - --no-autoupdate
