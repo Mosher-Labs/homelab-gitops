@@ -19,3 +19,10 @@ variable "slack" {
   default   = null
   sensitive = true
 }
+
+variable "webex_webhook_url" {
+  default     = null
+  description = "Webex incoming webhook URL for alerts, from 1Password. Null keeps Webex off. See RUNBOOK.md."
+  sensitive   = true
+  type        = string
+}
