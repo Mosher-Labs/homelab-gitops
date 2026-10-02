@@ -10,8 +10,6 @@ data:
     set -e
 
     # Install required packages
-    apk add --no-cache openssl
-
     echo "Generating GitHub App installation token..."
 
     # Read credentials from environment
@@ -55,10 +53,10 @@ data:
     echo "Requesting installation token for installation ${INSTALLATION_ID}..."
     api_url="https://api.github.com/app/installations"
     token_url="${api_url}/${INSTALLATION_ID}/access_tokens"
-    response=$(wget -q -O - --header="Authorization: Bearer ${jwt}" \
-      --header="Accept: application/vnd.github+json" \
-      "${token_url}" \
-      --post-data='{}')
+    response=$(curl -fsS -X POST \
+      -H "Authorization: Bearer ${jwt}" \
+      -H "Accept: application/vnd.github+json" \
+      -d '{}' "${token_url}")
 
     token=$(echo "$response" | \
       sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')

@@ -4,6 +4,8 @@ kind: CronJob
 metadata:
   name: renovate-benniemosher-dev
   namespace: renovate
+  annotations:
+    checkov.io/skip1: CKV_K8S_22=Renovate installs tools at runtime
   labels:
     app: renovate
     org: benniemosher-dev
@@ -23,10 +25,31 @@ spec:
             org: benniemosher-dev
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            # The renovate image's own user, which owns its home directory.
+            runAsUser: 12021
+            seccompProfile:
+              type: RuntimeDefault
           initContainers:
+            # Same image as the main container, so it is already on the node and
+            # has openssl and curl without installing packages as root.
             - name: token-generator
-              image: alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+              image: renovate/renovate:44.126.1@sha256:a49e9555e14cf51018cc819a45e15022b9151c601eb44141a18be5080701c352  # yamllint disable-line rule:line-length
               command: ["/bin/sh", "/scripts/generate-token.sh"]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
               env:
                 - name: GITHUB_APP_ID
                   valueFrom:
@@ -54,6 +77,10 @@ spec:
                 - |
                   export RENOVATE_TOKEN=$(cat /token/github-token)
                   exec renovate
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
               env:
                 - name: RENOVATE_PLATFORM
                   value: "github"
