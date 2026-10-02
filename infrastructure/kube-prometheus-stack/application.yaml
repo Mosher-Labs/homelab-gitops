@@ -69,6 +69,7 @@ spec:
             admin:
               existingSecret: grafana-admin
               userKey: admin-user
+              # checkov:skip=CKV_SECRET_6: A Secret key name, not a value
               passwordKey: admin-password
             # Ingress for Grafana UI
             ingress:

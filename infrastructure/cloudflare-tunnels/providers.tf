@@ -21,6 +21,7 @@ terraform {
   # step. Keep it out of every ArgoCD Application's tracked resources;
   # a prune could otherwise delete this state Secret.
   backend "kubernetes" {
+    # checkov:skip=CKV_SECRET_6: The suffix of the state Secret's name, not a secret value
     secret_suffix = "cloudflare-tunnels"
     namespace     = "terraform-state"
     config_path   = "~/k3s.yaml"

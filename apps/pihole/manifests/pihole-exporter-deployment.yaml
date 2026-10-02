@@ -37,10 +37,22 @@ spec:
                   matchLabels:
                     app: pihole-exporter
                 topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: pihole-exporter
           image: ghcr.io/mosher-labs/pihole6-exporter:1.1.8@sha256:7577d272d1e6d2a1afae1e15bdd9c7b31cf1ad9217e7009a601f6d752a8ff216  # yamllint disable-line rule:line-length
           imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           ports:
             - name: metrics
               containerPort: 9617

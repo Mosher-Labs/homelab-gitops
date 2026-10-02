@@ -43,6 +43,7 @@ spec:
           # Admin password - from sealed secret
           admin:
             enabled: true
+            # checkov:skip=CKV_SECRET_6: A Secret key name, not a value
             existingSecret: "pihole-password"
             passwordKey: "password"
 

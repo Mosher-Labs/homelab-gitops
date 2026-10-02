@@ -1,0 +1,12 @@
+---
+# Checkov settings for the checkov pre-commit hook.
+skip-path:
+  # SealedSecrets are encrypted for the cluster's controller and are meant to be
+  # committed, but their ciphertext trips CKV_SECRET_6 (high-entropy string).
+  # A plain substring: the regex form .*sealed-secret.*\.yaml doesn't match.
+  - sealed-secret
+skip-check:
+  # Secrets as env vars: the apps here read their credentials from env.
+  - CKV_K8S_35
+  # NetworkPolicy on every pod: not worth it for a single-user homelab.
+  - CKV2_K8S_6
