@@ -1,5 +1,5 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=7f33f9ef5bb8ab264cd65768c06f542af68e72ab" # v0.1.0
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=a9d0ca931dbe67fda842f2dbb23d495554e6130d" # v0.2.0
 
   cluster_name = "homelab"
   cluster_type = "k3s"
