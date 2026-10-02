@@ -188,7 +188,7 @@ data:
         {
           "customType": "regex",
           "description": "Pre-commit hook revs, pinned to commit SHAs as rev: <sha>  # frozen: vX.Y.Z. Replaces the built-in pre-commit manager, which cannot write a pinned rev",
-          "fileMatch": ["(^|/)\\.pre-commit-config\\.ya?ml$"],
+          "managerFilePatterns": ["/(^|/)\\.pre-commit-config\\.ya?ml$/"],
           "matchStrings": [
             "-\\s+repo:\\s+https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+?)(?:\\.git)?\\s*\\n(?<indentation>[ \\t]+)rev:\\s+(?:(?<currentDigest>[0-9a-f]{40})\\s+#\\s*frozen:\\s*)?\"?(?<currentValue>v?\\d+\\.[^\"\\s#]*)\"?[ \\t]*\\n"
           ],
@@ -199,7 +199,7 @@ data:
         {
           "customType": "regex",
           "description": "Keep NODE_VERSION in netlify.toml in sync with .node-version",
-          "fileMatch": ["(^|/)netlify\\.toml$"],
+          "managerFilePatterns": ["/(^|/)netlify\\.toml$/"],
           "matchStrings": ["NODE_VERSION = \"(?<currentValue>[^\"]+)\""],
           "depNameTemplate": "node",
           "datasourceTemplate": "node-version",
@@ -208,7 +208,7 @@ data:
         {
           "customType": "regex",
           "description": "Update digest-pinned images used by local docker_image hooks in .pre-commit-config.yaml",
-          "fileMatch": ["(^|/)\\.pre-commit-config\\.ya?ml$"],
+          "managerFilePatterns": ["/(^|/)\\.pre-commit-config\\.ya?ml$/"],
           "matchStrings": [
             "entry:\\s+(?<depName>[^\\s:@]+):(?<currentValue>[^\\s@]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
           ],
@@ -217,8 +217,8 @@ data:
         {
           "customType": "regex",
           "description": "Update _VERSION variables in Dockerfiles",
-          "fileMatch": [
-            "(^|/|\\.)Dockerfile$",
+          "managerFilePatterns": [
+            "/(^|/|\\.)Dockerfile$/",
             "(^|/)Dockerfile\\.[^/]*$"
           ],
           "matchStrings": [
@@ -232,21 +232,21 @@ data:
         "enabled": false
       },
       "helm-values": {
-        "fileMatch": [
-          "values\\.ya?ml$",
-          "application\\.ya?ml$"
+        "managerFilePatterns": [
+          "/values\\.ya?ml$/",
+          "/application\\.ya?ml$/"
         ]
       },
       "argocd": {
-        "fileMatch": [
-          "application\\.ya?ml$",
-          "applications/.+\\.ya?ml$"
+        "managerFilePatterns": [
+          "/application\\.ya?ml$/",
+          "/applications/.+\\.ya?ml$/"
         ]
       },
       "kubernetes": {
-        "fileMatch": [
-          "manifests/.+\\.ya?ml$",
-          "k8s/.+\\.ya?ml$"
+        "managerFilePatterns": [
+          "/manifests/.+\\.ya?ml$/",
+          "/k8s/.+\\.ya?ml$/"
         ]
       }
     }
