@@ -167,6 +167,12 @@ data:
           "schedule": ["on sunday"]
         },
         {
+          "description": "A repo deploying its own image loops forever: every merge builds a new image, Renovate bumps the digest, and that merge builds another. Add each such repo here; Renovate has no way to match a repo to its own image generically",
+          "matchRepositories": ["Mosher-Labs/book-review-publisher"],
+          "matchPackageNames": ["ghcr.io/mosher-labs/book-review-publisher"],
+          "enabled": false
+        },
+        {
           "description": "Pin pre-commit hook revs to commit SHAs (rev: <sha>  # frozen: vX.Y.Z); there is no preset for this",
           "matchFileNames": ["**/.pre-commit-config.yaml"],
           "pinDigests": true
