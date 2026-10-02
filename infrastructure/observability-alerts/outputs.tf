@@ -8,6 +8,11 @@ output "alert_rule_ids" {
   value       = module.observability.alert_rule_ids
 }
 
+output "dashboard_url" {
+  description = "URL of the overview dashboard."
+  value       = module.observability.dashboard_url
+}
+
 output "enabled_channels" {
   description = "The notification channels that are turned on."
   value       = module.observability.enabled_channels
