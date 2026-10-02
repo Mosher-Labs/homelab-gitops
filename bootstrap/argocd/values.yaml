@@ -176,19 +176,11 @@ argo-cd:
       enabled: true
       minAvailable: 1
 
-  # Dex: Single replica (no HA support), but PDB for faster rescheduling
+  # Dex: off. It is ArgoCD's SSO broker, and no SSO is configured (no
+  # dex.config or oidc.config; logins use the local admin account). Turn it
+  # back on with a dex.config if GitHub SSO is ever wanted.
   dex:
-    resources:
-      limits:
-        cpu: 50m
-        memory: 64Mi
-      requests:
-        cpu: 10m
-        memory: 32Mi
-    # PDB to prevent disruption during maintenance
-    pdb:
-      enabled: true
-      minAvailable: 1
+    enabled: false
 
   # Notifications: Single replica (leader election),
   # but PDB for faster rescheduling
