@@ -26,6 +26,34 @@ spec:
       targetRevision: 91.8.2
       helm:
         valuesObject:
+          # Built-in alerts that repeat the observability module's Grafana
+          # alerts (infrastructure/observability-alerts). The rest stay on:
+          # certificates, kubelet, API server, Prometheus health, jobs,
+          # quotas and clock skew have no Grafana equivalent.
+          defaultRules:
+            disabled:
+              CPUThrottlingHigh: true  # container_cpu_throttled
+              KubeContainerWaiting: true  # pod_waiting_failure
+              KubeDaemonSetNotScheduled: true  # daemonset_not_ready
+              KubeDaemonSetRolloutStuck: true  # daemonset_not_ready
+              # deployment_under_replicated
+              KubeDeploymentReplicasMismatch: true
+              KubeDeploymentRolloutStuck: true  # deployment_rollout_stuck
+              KubeHpaMaxedOut: true  # hpa_at_max
+              KubeNodeNotReady: true  # node_not_ready
+              KubeNodePressure: true  # node_pressure
+              KubeNodeUnreachable: true  # node_not_ready
+              KubePersistentVolumeFillingUp: true  # pvc_near_full_*
+              KubePodCrashLooping: true  # pod_crash_looping
+              # statefulset_under_replicated
+              KubeStatefulSetReplicasMismatch: true
+              NodeFilesystemAlmostOutOfSpace: true  # node_disk_full
+              NodeFilesystemSpaceFillingUp: true  # node_disk_full
+              NodeMemoryHighUtilization: true  # node_memory_high
+              NodeNetworkReceiveErrs: true  # node_network_errors
+              NodeNetworkTransmitErrs: true  # node_network_errors
+              TargetDown: true  # scrape_target_down
+
           # Prometheus Operator Configuration
           prometheusOperator:
             resources:
