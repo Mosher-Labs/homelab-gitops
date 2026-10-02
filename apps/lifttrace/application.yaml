@@ -32,19 +32,17 @@ spec:
                 app:
                   image:
                     # TEMPORARY: our own build, not upstream. Built from
-                    # TraceApps/lifttrace's dev branch (v1.3.1) plus two
-                    # of our own PRs not merged upstream yet:
-                    #   - TraceApps/lifttrace#114 (bottom nav pill
-                    #     hardcoded orange instead of --accent-2)
-                    #   - TraceApps/lifttrace#115 (cardio-only days
-                    #     didn't light up the streak/week-strip)
+                    # TraceApps/lifttrace's dev branch (1.4.0-dev04, which
+                    # already has our #114 and #115) plus our cardio
+                    # public API and MCP tools, not merged upstream yet:
+                    #   - TraceApps/lifttrace#135 (issue #134)
                     # Source + Dockerfile: benniemosher/lifttrace,
-                    # branch local/mosher-labs-build (commit f7048b0).
+                    # branch feat/cardio-public-api (commit 08b2039).
                     # Public GHCR package under the same account. Revert
-                    # to ghcr.io/traceapps/lifttrace once both PRs land
-                    # upstream and are in a release.
+                    # to ghcr.io/traceapps/lifttrace once #135 lands
+                    # upstream and is in a release.
                     repository: ghcr.io/benniemosher/lifttrace
-                    tag: mosher-labs-f7048b0@sha256:a8be77b6425464943912899fa8a53e25b41ffc0efaf08ef2dfdde7fcd50bcf44
+                    tag: mosher-labs-08b2039@sha256:e4aedf55f9ab7652c9c93f658f3b34dc0a97a37626af7b1d138cffad15263b80
                     # Required for :latest to actually mean latest — a
                     # rollout restart previously reused an already-
                     # cached local image instead of re-pulling, so a
