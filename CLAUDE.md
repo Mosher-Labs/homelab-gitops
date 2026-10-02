@@ -138,14 +138,13 @@ Each app directory contains:
   for the Tunnel/Access setup and troubleshooting.
 
 - **LiftTrace** (`bjw-s-labs/app-template` chart v5.2.1 /
-  `ghcr.io/benniemosher/lifttrace:mosher-labs-f7048b0`): Self-hosted weight
+  `ghcr.io/benniemosher/lifttrace:mosher-labs-08b2039`): Self-hosted weight
   training tracker, SQLite-backed, no telemetry. TEMPORARY custom image —
-  upstream v1.3.1 (dev branch) plus two of our own PRs not merged upstream
-  yet ([TraceApps/lifttrace#114](https://github.com/TraceApps/lifttrace/pull/114),
-  [#115](https://github.com/TraceApps/lifttrace/pull/115)). Source:
-  `benniemosher/lifttrace`, branch `local/mosher-labs-build`, public GHCR
-  package under the same account. Revert to `ghcr.io/traceapps/lifttrace`
-  once both land in an upstream release. Same lockdown pattern as CouchDB -
+  upstream dev (1.4.0-dev04) plus our cardio public API and MCP tools, not
+  merged upstream yet ([TraceApps/lifttrace#135](https://github.com/TraceApps/lifttrace/pull/135)).
+  Source: `benniemosher/lifttrace`, branch `feat/cardio-public-api`, public
+  GHCR package under the same account. Revert to `ghcr.io/traceapps/lifttrace`
+  once #135 lands in an upstream release. Same lockdown pattern as CouchDB -
   `cloudflared` sidecar, no Service/Ingress, Cloudflare Access gates the
   tunnel hostname `lifttrace.benniemosher.dev` (with a path-scoped bypass
   for `/api/mcp` so Claude's connector can reach it — Access still gates
