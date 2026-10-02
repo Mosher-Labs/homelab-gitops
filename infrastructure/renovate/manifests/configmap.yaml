@@ -162,8 +162,8 @@ data:
           "groupName": "Ruby dependencies"
         },
         {
-          "description": "Mosher-Labs/.github cuts a release on every merge; take its updates weekly. The CronJob runs 02:00 UTC Monday, which is Sunday evening in America/Denver",
-          "matchPackageNames": ["Mosher-Labs/.github"],
+          "description": "Mosher-Labs/.github and pre-commit-autoupdate release on every merge; take their updates weekly. The CronJob runs 02:00 UTC Monday, which is Sunday evening in America/Denver",
+          "matchPackageNames": ["Mosher-Labs/.github", "mosher-labs/pre-commit-autoupdate", "Mosher-Labs/pre-commit-autoupdate"],
           "schedule": ["on sunday"]
         },
         {
