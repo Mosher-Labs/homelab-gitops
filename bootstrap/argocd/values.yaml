@@ -127,13 +127,15 @@ argo-cd:
       serviceMonitor:
         enabled: true
         interval: 30s
+    # Rendering Helm charts is bursty: three new apps at once OOM-killed both
+    # replicas at 256Mi (2026-10-02). Idle use is about 30Mi.
     resources:
       limits:
-        cpu: 200m
-        memory: 256Mi
+        cpu: 1000m
+        memory: 1Gi
       requests:
         cpu: 100m
-        memory: 128Mi
+        memory: 256Mi
     # HA: Topology spread - prefer one pod per node (resilient to node failures)
     topologySpreadConstraints:
       - maxSkew: 1
