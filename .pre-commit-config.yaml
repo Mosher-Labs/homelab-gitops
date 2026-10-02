@@ -5,7 +5,7 @@ default_install_hook_types:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.49.1
+    rev: 5b5dddc4fb0f83c3ea1fc5616fa63e115dce83e0  # frozen: v0.49.1
     hooks:
       - id: markdownlint-docker
   - repo: https://github.com/rhysd/actionlint
