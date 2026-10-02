@@ -87,6 +87,13 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
+            # Logs from infrastructure/loki
+            additionalDataSources:
+              - name: Loki
+                type: loki
+                uid: loki
+                url: http://loki.monitoring.svc.cluster.local:3100
+                access: proxy
             # Persistence
             persistence:
               enabled: true

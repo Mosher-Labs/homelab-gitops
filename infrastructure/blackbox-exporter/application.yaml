@@ -1,0 +1,112 @@
+---
+# ArgoCD Application for the Prometheus blackbox exporter: synthetic checks.
+# Prometheus probes each target below, and the "synthetics" Grafana alerts
+# (infrastructure/observability-alerts) fire when one fails, gets slow, or its
+# TLS certificate nears expiry. Add a target to watch something new.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blackbox-exporter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: prometheus-blackbox-exporter
+    targetRevision: 11.19.1
+    helm:
+      valuesObject:
+        config:
+          modules:
+            # 2xx after following redirects.
+            http_2xx:
+              prober: http
+              timeout: 10s
+              http:
+                preferred_ip_protocol: ip4
+            # The page answers, but behind a login (Cloudflare Access): any
+            # 2xx or 3xx without following the redirect to the login page.
+            http_no_redirect:
+              prober: http
+              timeout: 10s
+              http:
+                follow_redirects: false
+                preferred_ip_protocol: ip4
+                valid_status_codes: [200, 301, 302, 303, 307, 308]
+            # The server is up and enforcing auth.
+            http_401:
+              prober: http
+              timeout: 10s
+              http:
+                preferred_ip_protocol: ip4
+                valid_status_codes: [401]
+            # Pi-hole answers DNS queries.
+            dns_example_com:
+              prober: dns
+              timeout: 5s
+              dns:
+                preferred_ip_protocol: ip4
+                query_name: example.com
+                query_type: A
+                valid_rcodes: [NOERROR]
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        serviceMonitor:
+          enabled: true
+          defaults:
+            interval: 60s
+          targets:
+            # In-cluster services
+            - name: argocd
+              url: http://argocd-server.argocd.svc.cluster.local/healthz
+              module: http_2xx
+            - name: book-review-publisher
+              url: http://book-review-publisher.book-review-publisher.svc.cluster.local/health
+              module: http_2xx
+            - name: couchdb
+              url: http://couchdb-couchdb.couchdb.svc.cluster.local:5984/_up
+              module: http_401
+            - name: grafana
+              url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
+              module: http_2xx
+            - name: home-assistant
+              url: http://home-assistant.home-assistant.svc.cluster.local:8123/
+              module: http_2xx
+            - name: homebridge
+              url: http://homebridge.homebridge.svc.cluster.local:8581/
+              module: http_2xx
+            - name: pihole-dns
+              url: pihole-dns-udp.pihole.svc.cluster.local:53
+              module: dns_example_com
+            - name: pihole-web
+              url: http://pihole-web.pihole.svc.cluster.local/admin/
+              module: http_2xx
+            # Public sites, which also cover their TLS certificates
+            - name: benniemosher.com
+              url: https://benniemosher.com
+              module: http_2xx
+            - name: lifttrace
+              url: https://lifttrace.benniemosher.dev/
+              module: http_no_redirect
+            - name: moniquemosher.com
+              url: https://moniquemosher.com
+              module: http_2xx
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
