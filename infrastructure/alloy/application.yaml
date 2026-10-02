@@ -1,0 +1,90 @@
+---
+# ArgoCD Application for Grafana Alloy: ships every pod's logs to Loki
+# (infrastructure/loki) with namespace, pod, container, app and cluster labels.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 1.13.0
+    helm:
+      valuesObject:
+        alloy:
+          configMap:
+            # Alloy's own config language; its labels don't fit in 80 columns.
+            # yamllint disable rule:line-length
+            content: |
+              discovery.kubernetes "pods" {
+                role = "pod"
+              }
+
+              discovery.relabel "pods" {
+                targets = discovery.kubernetes.pods.targets
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  target_label  = "namespace"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  target_label  = "pod"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  target_label  = "container"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                  target_label  = "app"
+                }
+              }
+
+              loki.source.kubernetes "pods" {
+                targets    = discovery.relabel.pods.output
+                forward_to = [loki.write.default.receiver]
+              }
+
+              loki.write "default" {
+                endpoint {
+                  url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+                }
+                external_labels = {
+                  cluster = "homelab",
+                }
+              }
+            # yamllint enable rule:line-length
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        # loki.source.kubernetes tails logs through the API server, so one
+        # replica sees every pod. A DaemonSet would ship each line once per
+        # node.
+        controller:
+          type: deployment
+          replicas: 1
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

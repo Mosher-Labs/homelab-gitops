@@ -1,0 +1,83 @@
+---
+# ArgoCD Application for Loki: log storage for the cluster, queried from
+# Grafana. Single binary with filesystem storage, which is plenty for one
+# small cluster. Alloy (infrastructure/alloy) ships the logs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 7.3.0
+    helm:
+      valuesObject:
+        deploymentMode: SingleBinary
+        loki:
+          auth_enabled: false
+          commonConfig:
+            replication_factor: 1
+          compactor:
+            delete_request_store: filesystem
+            retention_enabled: true
+          limits_config:
+            # Keep 7 days of logs.
+            retention_period: 168h
+          schemaConfig:
+            configs:
+              - from: "2024-04-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
+          storage:
+            type: filesystem
+        singleBinary:
+          replicas: 1
+          persistence:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+        # Single-binary mode needs none of the scalable components or caches.
+        backend:
+          replicas: 0
+        read:
+          replicas: 0
+        write:
+          replicas: 0
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+        gateway:
+          enabled: false
+        lokiCanary:
+          enabled: false
+        test:
+          enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
