@@ -1,0 +1,17 @@
+---
+# Scrapes the collector's Prometheus exporter (service.yaml).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-metrics
+  namespace: opentelemetry
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-metrics
+  endpoints:
+    - port: metrics
+      interval: 30s
+      # Keep the job label the exporter sets from each app's service.name,
+      # so each app shows up as its own service in alerts and dashboards.
+      honorLabels: true

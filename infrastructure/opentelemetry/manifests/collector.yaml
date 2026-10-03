@@ -1,0 +1,76 @@
+---
+# Receives traces and metrics from injected agents, and turns server spans
+# into request metrics named after the OpenTelemetry HTTP conventions
+# (http_server_request_duration_seconds, by http_route,
+# http_request_method and http_response_status_code), which is what the
+# observability module's APM alerts and Services row read. That way an app
+# whose agent only produces traces (Go's eBPF agent) still gets APM.
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel
+  namespace: opentelemetry
+spec:
+  mode: deployment
+  replicas: 1
+  # contrib: has the spanmetrics connector and filter processor.
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.160.0@sha256:799dc6cf12c96192af37b5bdba804da8c10b3bc563b43cb90c3f3c58d9572ad6
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch: {}
+      # Request metrics come from server spans only.
+      filter/server-spans:
+        error_mode: ignore
+        traces:
+          span:
+            - kind != SPAN_KIND_SERVER
+    connectors:
+      spanmetrics:
+        # "http.server.request" + "duration" in seconds becomes
+        # http_server_request_duration_seconds in Prometheus.
+        namespace: http.server.request
+        histogram:
+          unit: s
+          explicit:
+            # OpenTelemetry's default HTTP buckets, in seconds.
+            buckets:
+              [5ms, 10ms, 25ms, 50ms, 75ms, 100ms, 250ms, 500ms, 750ms,
+               1s, 2.5s, 5s, 7.5s, 10s]
+        dimensions:
+          - name: http.request.method
+          - name: http.route
+          - name: http.response.status_code
+    exporters:
+      # Prometheus scrapes this. The job label comes from each app's
+      # service.name, kept by the ServiceMonitor's honorLabels.
+      prometheus:
+        endpoint: 0.0.0.0:8889
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [filter/server-spans, batch]
+          exporters: [spanmetrics]
+        metrics:
+          receivers: [otlp, spanmetrics]
+          processors: [batch]
+          exporters: [prometheus]

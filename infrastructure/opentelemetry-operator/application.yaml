@@ -1,0 +1,55 @@
+---
+# ArgoCD Application for the OpenTelemetry Operator: injects OpenTelemetry
+# agents into pods that opt in with an annotation, so apps we can't change
+# still produce request metrics (homelab-gitops#153). The collector and the
+# Instrumentation settings live in infrastructure/opentelemetry.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-operator
+    targetRevision: 0.124.1
+    helm:
+      valuesObject:
+        admissionWebhooks:
+          # No cert-manager here: the chart generates the webhook
+          # certificate itself.
+          autoGenerateCert:
+            enabled: true
+          certManager:
+            enabled: false
+        manager:
+          autoInstrumentation:
+            # Off by default in the chart. Go has no in-process agent, so
+            # the operator injects an eBPF sidecar instead (privileged; see
+            # infrastructure/opentelemetry/README.md).
+            go:
+              enabled: true
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 20m
+              memory: 64Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opentelemetry
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The chart installs CRDs that the operator's own resources use.
+      - ServerSideApply=true
