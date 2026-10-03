@@ -6,6 +6,10 @@ terraform {
       source  = "grafana/grafana"
       version = "4.47.0"
     }
+    healthchecksio = {
+      source  = "kristofferahl/healthchecksio"
+      version = "2.3.0"
+    }
   }
 
   # Same pattern as cloudflare-tunnels: state is a Secret in this cluster's
@@ -21,4 +25,8 @@ terraform {
 provider "grafana" {
   url  = var.grafana_url
   auth = var.grafana_auth
+}
+
+provider "healthchecksio" {
+  api_key = var.healthchecksio_api_key
 }

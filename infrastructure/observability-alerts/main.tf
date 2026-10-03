@@ -1,6 +1,5 @@
 module "observability" {
-  # TEMPORARY: pinned to module PR #17 (custom_rules) until it's released.
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=9ade8f461f4fc96aedee631b8e7f8193a473c5a5"
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=985c6a29a49fe748e463ac90553835eeb5d2e382" # v0.10.0
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
@@ -23,8 +22,8 @@ module "observability" {
   }
   # Pings healthchecks.io while Grafana and Prometheus work; it emails if the
   # pings stop. See RUNBOOK.md.
-  heartbeat = var.heartbeat_url == null ? null : {
-    url = var.heartbeat_url
+  heartbeat = {
+    url = healthchecksio_check.heartbeat.ping_url
   }
   prometheus_datasource_uid = "prometheus"
   slack = var.slack == null ? null : {
