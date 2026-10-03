@@ -38,9 +38,34 @@ State is a Secret in the `terraform-state` namespace, the same as
 
 Grafana pings a healthchecks.io check every 5 minutes for as long as it can
 query Prometheus. If the pings stop, because Grafana, Prometheus or the cluster
-is down, healthchecks.io emails. The ping URL is in the 1Password item
-"healthchecks-homelab-email", in its `hostname` field. Managing the check in
-Terraform and adding Slack and Webex to it is #151.
+is down, healthchecks.io alerts email, Slack and Webex.
+
+The check is managed in `healthchecks.tf`, and its ping URL feeds the
+module's heartbeat directly. The channels are not: healthchecks.io's API
+can't create integrations, so each was added once in its web UI (Integrations):
+
+- **Email:** the account's email.
+- **Slack:** the Slack integration, posting to the homelab alerts channel.
+- **Webex:** a Webhook integration named `Webex` that POSTs to the Webex
+  incoming webhook (1Password "Webex Heimdallr Webhook Token") with header
+  `Content-Type: application/json` and these bodies (down, then up):
+
+  ```json
+  {"markdown": "**🔴 DOWN: $NAME**\n- Grafana stopped pinging. Grafana, Prometheus or the cluster may be down."}
+  {"markdown": "**✅ UP: $NAME**\n- Grafana is pinging again."}
+  ```
+
+Terraform looks the channels up by kind (and name, for the webhook) and
+attaches them to the check. A new channel needs adding in the UI and a data
+source in `healthchecks.tf`.
+
+The API key is the 1Password item "helthchecks read/write token" (field
+`credential`): Settings → API Access in the healthchecks.io project, read-write.
+
+The check was created by hand first and imported:
+`terraform import healthchecksio_check.heartbeat <check UUID>`. The UUID is the
+last part of the ping URL. It isn't in code because this repo is public and
+the UUID lets anyone send pings.
 
 ## Running Terraform
 
@@ -52,8 +77,8 @@ export TF_VAR_slack="{token=\"$(op read 'op://Mosher Home/Slack Heimdallr OAuth 
 # Turns on Webex through the bot. Without it, the plan removes Webex (or falls
 # back to TF_VAR_webex_webhook_url if that is set).
 export TF_VAR_webex_bot_token="$(op read 'op://Mosher Home/webex heimdallr bot token/credential')"
-# Turns on the heartbeat. Without it, the plan removes the heartbeat.
-export TF_VAR_heartbeat_url="$(op read 'op://Mosher Home/healthchecks-homelab-email/hostname')"
+# The healthchecks.io check behind the heartbeat (required).
+export TF_VAR_healthchecksio_api_key="$(op read 'op://Mosher Home/helthchecks read/write token/credential')"
 terraform init
 terraform plan
 terraform apply

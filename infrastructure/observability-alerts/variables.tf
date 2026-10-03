@@ -10,9 +10,8 @@ variable "grafana_url" {
   default     = "http://grafana.mosher-labs.local"
 }
 
-variable "heartbeat_url" {
-  default     = null
-  description = "healthchecks.io ping URL for the alerting heartbeat, from 1Password. Null turns the heartbeat off. See RUNBOOK.md."
+variable "healthchecksio_api_key" {
+  description = "Read-write healthchecks.io API key for the project that holds the heartbeat check, from 1Password. See RUNBOOK.md."
   sensitive   = true
   type        = string
 }

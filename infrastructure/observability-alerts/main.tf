@@ -22,8 +22,8 @@ module "observability" {
   }
   # Pings healthchecks.io while Grafana and Prometheus work; it emails if the
   # pings stop. See RUNBOOK.md.
-  heartbeat = var.heartbeat_url == null ? null : {
-    url = var.heartbeat_url
+  heartbeat = {
+    url = healthchecksio_check.heartbeat.ping_url
   }
   prometheus_datasource_uid = "prometheus"
   slack = var.slack == null ? null : {
