@@ -24,6 +24,9 @@ spec:
           # certificate itself.
           autoGenerateCert:
             enabled: true
+            # The chart makes a new random certificate on every render, and
+            # ArgoCD renders often. Keep the first one (see ignoreDifferences).
+            recreate: false
           certManager:
             enabled: false
         manager:
@@ -45,6 +48,25 @@ spec:
     server: https://kubernetes.default.svc
     namespace: opentelemetry
 
+  # The generated webhook certificate differs on every render. Without this,
+  # ArgoCD would apply the Secret and the webhooks' caBundle from different
+  # renders, and the API server would reject the webhook's certificate.
+  ignoreDifferences:
+    - kind: Secret
+      name: opentelemetry-operator-controller-manager-service-cert
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: opentelemetry-operator-mutation
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: opentelemetry-operator-validation
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
+
   syncPolicy:
     automated:
       prune: true
@@ -53,3 +75,4 @@ spec:
       - CreateNamespace=true
       # The chart installs CRDs that the operator's own resources use.
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
