@@ -32,17 +32,18 @@ spec:
                 app:
                   image:
                     # TEMPORARY: our own build, not upstream. Built from
-                    # TraceApps/lifttrace's dev branch (1.4.0-dev04, which
-                    # already has our #114 and #115) plus our cardio
-                    # public API and MCP tools, not merged upstream yet:
-                    #   - TraceApps/lifttrace#135 (issue #134)
-                    # Source + Dockerfile: benniemosher/lifttrace,
-                    # branch feat/cardio-public-api (commit 08b2039).
-                    # Public GHCR package under the same account. Revert
-                    # to ghcr.io/traceapps/lifttrace once #135 lands
-                    # upstream and is in a release.
+                    # TraceApps/lifttrace's dev branch (1.4.0-dev04) plus
+                    # two of our changes not merged upstream yet:
+                    #   - TraceApps/lifttrace#135, the cardio public API
+                    #     and MCP tools (issue #134)
+                    #   - Prometheus metrics (issue #136)
+                    # Source + Dockerfile: benniemosher/lifttrace, branch
+                    # local/mosher-labs-build (commit 5cfd98a). Public GHCR
+                    # package under the same account. Revert to
+                    # ghcr.io/traceapps/lifttrace once both land upstream
+                    # and are in a release.
                     repository: ghcr.io/benniemosher/lifttrace
-                    tag: mosher-labs-08b2039@sha256:e4aedf55f9ab7652c9c93f658f3b34dc0a97a37626af7b1d138cffad15263b80
+                    tag: mosher-labs-5cfd98a@sha256:50410b9f95de05835124cad30c757d6f23d9b6b777e10ee813f84ffaed48694d
                     # Required for :latest to actually mean latest — a
                     # rollout restart previously reused an already-
                     # cached local image instead of re-pulling, so a
@@ -66,6 +67,10 @@ spec:
                     # workout.completed webhook feeds lifttrace-strava-sync,
                     # which posts finished workouts to Strava. See RUNBOOK.md.
                     WEBHOOKS_ENABLED: "1"
+                    # Request metrics for the observability module's APM
+                    # alerts and dashboard, on port 9464. The tunnel only
+                    # routes to 3002, so /metrics is never public.
+                    METRICS_ENABLED: "true"
                     # PUBLIC_API_ENABLED still off — MCP covers the
                     # Claude-integration use case; no other consumer
                     # needs the plain REST API yet.
@@ -134,6 +139,28 @@ spec:
           # apps/couchdb. cloudflared reaches the app over
           # localhost:3002 inside the shared pod; nothing else in the
           # cluster has (or needs) a path in. See manifests/networkpolicy.yaml.
+
+          # In-cluster only: Prometheus scrapes /metrics here.
+          service:
+            metrics:
+              controller: lifttrace
+              ports:
+                metrics:
+                  port: 9464
+          serviceMonitor:
+            metrics:
+              service:
+                identifier: metrics
+              endpoints:
+                - port: metrics
+                  scheme: http
+                  path: /metrics
+                  interval: 30s
+                  # Name the service "lifttrace" in alerts and dashboards,
+                  # not after the Kubernetes Service.
+                  relabelings:
+                    - targetLabel: job
+                      replacement: lifttrace
 
           persistence:
             db:
