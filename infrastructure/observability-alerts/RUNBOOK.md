@@ -34,6 +34,14 @@ State is a Secret in the `terraform-state` namespace, the same as
   when the bot token is unset, showing the webhook's initial as its avatar.
   Leave both unset to keep Webex off.
 
+## Heartbeat
+
+Grafana pings a healthchecks.io check every 5 minutes for as long as it can
+query Prometheus. If the pings stop, because Grafana, Prometheus or the cluster
+is down, healthchecks.io emails. The ping URL is in the 1Password item
+"healthchecks-homelab-email", in its `hostname` field. Managing the check in
+Terraform and adding Slack and Webex to it is #151.
+
 ## Running Terraform
 
 ```bash
@@ -44,6 +52,8 @@ export TF_VAR_slack="{token=\"$(op read 'op://Mosher Home/Slack Heimdallr OAuth 
 # Turns on Webex through the bot. Without it, the plan removes Webex (or falls
 # back to TF_VAR_webex_webhook_url if that is set).
 export TF_VAR_webex_bot_token="$(op read 'op://Mosher Home/webex heimdallr bot token/credential')"
+# Turns on the heartbeat. Without it, the plan removes the heartbeat.
+export TF_VAR_heartbeat_url="$(op read 'op://Mosher Home/healthchecks-homelab-email/hostname')"
 terraform init
 terraform plan
 terraform apply

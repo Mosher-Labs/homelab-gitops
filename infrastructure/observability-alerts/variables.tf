@@ -10,6 +10,13 @@ variable "grafana_url" {
   default     = "http://grafana.mosher-labs.local"
 }
 
+variable "heartbeat_url" {
+  default     = null
+  description = "healthchecks.io ping URL for the alerting heartbeat, from 1Password. Null turns the heartbeat off. See RUNBOOK.md."
+  sensitive   = true
+  type        = string
+}
+
 variable "slack" {
   description = "Slack bot token and channel ID for alerts, from 1Password. Null keeps notifications off. See RUNBOOK.md."
   type = object({
