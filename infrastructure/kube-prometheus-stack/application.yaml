@@ -54,6 +54,37 @@ spec:
               NodeNetworkTransmitErrs: true  # node_network_errors
               TargetDown: true  # scrape_target_down
 
+          # Series reduction (2026-10-03): 158k active series, and only 303
+          # of 2,483 metric names are used by any rule or dashboard.
+          # k3s runs the API server, scheduler and kubelet in one process, so
+          # the kubelet's /metrics also serves the API server's metrics, which
+          # the apiserver job already scrapes. Both lists keep the chart's
+          # default drop rule.
+          kubelet:
+            serviceMonitor:
+              metricRelabelings:
+                # Chart default: fewer storage-operation buckets.
+                - action: drop
+                  sourceLabels: [__name__, le]
+                  regex: (csi_operations|storage_operation_duration)_seconds_bucket;(0.25|2.5|15|25|120|600)(\.0)?
+                # The API server's own metrics, duplicated on the kubelet
+                # endpoint. Nothing queries them with job="kubelet".
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: (apiserver|etcd|scheduler|workqueue|authentication|authorization|aggregator|apiextensions|admission)_.+
+          kubeApiServer:
+            serviceMonitor:
+              metricRelabelings:
+                # Chart default: fewer API server latency buckets.
+                - action: drop
+                  sourceLabels: [__name__, le]
+                  regex: (etcd_request|apiserver_request_slo|apiserver_request_sli|apiserver_request)_duration_seconds_bucket;(0\.15|0\.2|0\.3|0\.35|0\.4|0\.45|0\.6|0\.7|0\.8|0\.9|1\.25|1\.5|1\.75|2|3|3\.5|4|4\.5|6|7|8|9|15|20|40|45|50)(\.0)?
+                # Histograms no rule or dashboard reads (checked against every
+                # PrometheusRule, Grafana dashboard and Grafana alert rule).
+                - action: drop
+                  sourceLabels: [__name__]
+                  regex: (apiserver_request_duration_seconds|etcd_request_duration_seconds|apiserver_request_body_size_bytes|apiserver_response_sizes|apiserver_watch_cache_read_wait_seconds|apiserver_watch_events_sizes|workqueue_work_duration_seconds|scheduler_plugin_execution_duration_seconds)_bucket
+
           # Prometheus Operator Configuration
           prometheusOperator:
             resources:
