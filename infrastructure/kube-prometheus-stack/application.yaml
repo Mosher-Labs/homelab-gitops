@@ -78,14 +78,16 @@ spec:
                     resources:
                       requests:
                         storage: 15Gi
-              # Resource limits
+              # Resource limits. It now also scrapes LiftTrace, Loki, Alloy
+              # and 11 blackbox probes, and serves the observability-alerts
+              # rules, which put it at 778Mi of 1Gi (2026-10-03).
               resources:
                 limits:
                   cpu: 500m
-                  memory: 1Gi
+                  memory: 2Gi
                 requests:
                   cpu: 200m
-                  memory: 512Mi
+                  memory: 768Mi
               # Service monitors
               serviceMonitorSelectorNilUsesHelmValues: false
               podMonitorSelectorNilUsesHelmValues: false
