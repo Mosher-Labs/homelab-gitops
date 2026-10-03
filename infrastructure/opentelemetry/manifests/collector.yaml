@@ -59,6 +59,10 @@ spec:
           - name: http.request.method
           - name: http.route
           - name: http.response.status_code
+          # A resource attribute the operator injects. The ServiceMonitor
+          # turns it into the namespace label, which would otherwise be the
+          # collector's own namespace.
+          - name: k8s.namespace.name
     exporters:
       # Prometheus scrapes this. The job label comes from each app's
       # service.name, kept by the ServiceMonitor's honorLabels.
