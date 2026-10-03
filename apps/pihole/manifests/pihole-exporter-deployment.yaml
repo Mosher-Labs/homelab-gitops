@@ -46,7 +46,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: pihole-exporter
-          image: ghcr.io/mosher-labs/pihole6-exporter:1.1.8@sha256:7577d272d1e6d2a1afae1e15bdd9c7b31cf1ad9217e7009a601f6d752a8ff216  # yamllint disable-line rule:line-length
+          image: ghcr.io/mosher-labs/pihole6-exporter:1.1.11@sha256:137919d19955353a9a29c704d30b5cc7dc8a33dfd6c96c671bba3b27ca232dcf  # yamllint disable-line rule:line-length
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
