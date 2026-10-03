@@ -78,13 +78,14 @@ spec:
                     resources:
                       requests:
                         storage: 15Gi
-              # Resource limits. It now also scrapes LiftTrace, Loki, Alloy
-              # and 11 blackbox probes, and serves the observability-alerts
-              # rules, which put it at 778Mi of 1Gi (2026-10-03).
+              # Resource limits, sized from 14 days of data (2026-10-03):
+              # average 628Mi, max 900Mi. Request 1.25x average, limit 1.5x
+              # max. It now also scrapes LiftTrace, Loki, Alloy and 11
+              # blackbox probes, and serves the observability-alerts rules.
               resources:
                 limits:
                   cpu: 500m
-                  memory: 2Gi
+                  memory: 1536Mi
                 requests:
                   cpu: 200m
                   memory: 768Mi
