@@ -1,6 +1,11 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=1c054009600e0755bf1da312c33db1b8205cf2d4" # v0.7.1
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=56081535a6e81f94531e4be0a3b19322fa4926cd" # v0.8.1
 
+  alerts = {
+    # Service-level alerts and the dashboard's Services row, from apps that
+    # serve OpenTelemetry-style request metrics. Today that's LiftTrace.
+    apm = { enabled = true }
+  }
   cluster_name = "homelab"
   cluster_type = "k3s"
   dashboards = {
