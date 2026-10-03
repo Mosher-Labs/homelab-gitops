@@ -26,10 +26,21 @@ State is a Secret in the `terraform-state` namespace, the same as
   `C0862CB6P8W`. The bot needs `chat:write`, plus `chat:write.customize` to post
   as "Heimdallr" rather than Grafana's default "Grafana". Leave `TF_VAR_slack`
   unset to keep notifications off.
-- **Webex:** an incoming webhook into the alerts space, in the 1Password item
-  "Webex Heimdallr Webhook Token" (field `credential`). Leave
-  `TF_VAR_webex_webhook_url` unset to keep Webex off. Webhook posts show the
-  webhook's initial as the avatar; a Webex bot would show Heimdallr's logo.
+- **Webex:** the Heimdallr bot (`heimdallr-mo@webex.bot`, with the logo as its
+  avatar) posting to the "homelab alerts" space, whose room ID is in
+  `locals.tf`. Its token is the 1Password item "webex heimdallr bot token"
+  (field `credential`). The bot must stay a member of the space. As a fallback,
+  the incoming webhook "Webex Heimdallr Webhook Token" posts to the same space
+  when the bot token is unset, showing the webhook's initial as its avatar.
+  Leave both unset to keep Webex off.
+
+## Heartbeat
+
+Grafana pings a healthchecks.io check every 5 minutes for as long as it can
+query Prometheus. If the pings stop, because Grafana, Prometheus or the cluster
+is down, healthchecks.io emails. The ping URL is in the 1Password item
+"healthchecks-homelab-email", in its `hostname` field. Managing the check in
+Terraform and adding Slack and Webex to it is #151.
 
 ## Running Terraform
 
@@ -38,8 +49,11 @@ export KUBECONFIG=~/k3s.yaml
 export TF_VAR_grafana_auth="$(kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-user}' | base64 -d):$(kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d)"
 # Turns on Slack. Without it, the plan removes the contact point.
 export TF_VAR_slack="{token=\"$(op read 'op://Mosher Home/Slack Heimdallr OAuth Token/credential')\", recipient=\"C0862CB6P8W\"}"
-# Turns on Webex. Without it, the plan removes Webex from the contact point.
-export TF_VAR_webex_webhook_url="$(op read 'op://Mosher Home/Webex Heimdallr Webhook Token/credential')"
+# Turns on Webex through the bot. Without it, the plan removes Webex (or falls
+# back to TF_VAR_webex_webhook_url if that is set).
+export TF_VAR_webex_bot_token="$(op read 'op://Mosher Home/webex heimdallr bot token/credential')"
+# Turns on the heartbeat. Without it, the plan removes the heartbeat.
+export TF_VAR_heartbeat_url="$(op read 'op://Mosher Home/healthchecks-homelab-email/hostname')"
 terraform init
 terraform plan
 terraform apply

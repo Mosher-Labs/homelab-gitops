@@ -1,5 +1,5 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=85722d2fd5b9276ce7770614676ea8d776bed71d" # v0.6.0
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=1c054009600e0755bf1da312c33db1b8205cf2d4" # v0.7.1
 
   cluster_name = "homelab"
   cluster_type = "k3s"
@@ -9,9 +9,14 @@ module "observability" {
   }
   # Each channel is on when its TF_VAR_ is set; see RUNBOOK.md.
   notifications = {
-    enabled = nonsensitive(var.slack != null || var.webex_webhook_url != null)
-    # Heimdallr's logo. Shows on Slack; Webex needs a bot for an avatar.
+    enabled = nonsensitive(var.slack != null || var.webex_bot_token != null || var.webex_webhook_url != null)
+    # Heimdallr's logo on Slack. The Webex bot has the same logo as its avatar.
     icon_url = "https://avatars.githubusercontent.com/u/195353313?v=4"
+  }
+  # Pings healthchecks.io while Grafana and Prometheus work; it emails if the
+  # pings stop. See RUNBOOK.md.
+  heartbeat = var.heartbeat_url == null ? null : {
+    url = var.heartbeat_url
   }
   prometheus_datasource_uid = "prometheus"
   slack = var.slack == null ? null : {
@@ -20,7 +25,12 @@ module "observability" {
     # Grafana posts as "Grafana" unless told otherwise.
     username = "Heimdallr"
   }
-  webex = var.webex_webhook_url == null ? null : {
+  # The Heimdallr bot when its token is set (it has the logo as its avatar),
+  # otherwise the incoming webhook, otherwise no Webex.
+  webex = var.webex_bot_token != null ? {
+    room_id = local.webex_room_id
+    token   = var.webex_bot_token
+    } : var.webex_webhook_url != null ? {
     webhook_url = var.webex_webhook_url
-  }
+  } : null
 }

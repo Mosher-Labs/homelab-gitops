@@ -10,6 +10,13 @@ variable "grafana_url" {
   default     = "http://grafana.mosher-labs.local"
 }
 
+variable "heartbeat_url" {
+  default     = null
+  description = "healthchecks.io ping URL for the alerting heartbeat, from 1Password. Null turns the heartbeat off. See RUNBOOK.md."
+  sensitive   = true
+  type        = string
+}
+
 variable "slack" {
   description = "Slack bot token and channel ID for alerts, from 1Password. Null keeps notifications off. See RUNBOOK.md."
   type = object({
@@ -20,9 +27,16 @@ variable "slack" {
   sensitive = true
 }
 
+variable "webex_bot_token" {
+  default     = null
+  description = "Access token for the Heimdallr Webex bot, from 1Password. Takes precedence over webex_webhook_url. See RUNBOOK.md."
+  sensitive   = true
+  type        = string
+}
+
 variable "webex_webhook_url" {
   default     = null
-  description = "Webex incoming webhook URL for alerts, from 1Password. Null keeps Webex off. See RUNBOOK.md."
+  description = "Webex incoming webhook URL, from 1Password: the fallback when webex_bot_token is unset. See RUNBOOK.md."
   sensitive   = true
   type        = string
 }
