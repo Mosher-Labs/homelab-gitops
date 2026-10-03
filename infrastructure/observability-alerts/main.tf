@@ -1,10 +1,13 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=56081535a6e81f94531e4be0a3b19322fa4926cd" # v0.8.1
+  # TEMPORARY: pinned to module PR #17 (custom_rules) until it's released.
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=9ade8f461f4fc96aedee631b8e7f8193a473c5a5"
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
     # serve OpenTelemetry-style request metrics. Today that's LiftTrace.
     apm = { enabled = true }
+    # Homelab-specific rules; see locals.tf.
+    custom_rules = local.custom_rules
   }
   cluster_name = "homelab"
   cluster_type = "k3s"
