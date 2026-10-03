@@ -15,3 +15,12 @@ spec:
       # Keep the job label the exporter sets from each app's service.name,
       # so each app shows up as its own service in alerts and dashboards.
       honorLabels: true
+      # Prometheus sets namespace to the collector's namespace. Use the
+      # app's namespace instead, so alerts that join on namespace (deploy
+      # error rate) match the app's deployments.
+      metricRelabelings:
+        - sourceLabels: [k8s_namespace_name]
+          regex: (.+)
+          targetLabel: namespace
+        - regex: k8s_namespace_name
+          action: labeldrop
