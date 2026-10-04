@@ -1,6 +1,6 @@
 ---
 # ArgoCD Application for kube-prometheus-stack
-# Complete monitoring stack: Prometheus + Grafana + AlertManager
+# Complete monitoring stack: Prometheus + Grafana (alerting is in Grafana)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -26,33 +26,30 @@ spec:
       targetRevision: 91.9.0
       helm:
         valuesObject:
-          # Built-in alerts that repeat the observability module's Grafana
-          # alerts (infrastructure/observability-alerts). The rest stay on:
-          # certificates, kubelet, API server, Prometheus health, jobs,
-          # quotas and clock skew have no Grafana equivalent.
+          # Alerting goes through Grafana only (infrastructure/observability-
+          # alerts, homelab-gitops#166). The module's catalog covers what the
+          # built-in alerts did, so the alert-only rule groups are off. The
+          # recording rule groups stay on: the built-in dashboards use them.
           defaultRules:
-            disabled:
-              CPUThrottlingHigh: true  # container_cpu_throttled
-              KubeContainerWaiting: true  # pod_waiting_failure
-              KubeDaemonSetNotScheduled: true  # daemonset_not_ready
-              KubeDaemonSetRolloutStuck: true  # daemonset_not_ready
-              # deployment_under_replicated
-              KubeDeploymentReplicasMismatch: true
-              KubeDeploymentRolloutStuck: true  # deployment_rollout_stuck
-              KubeHpaMaxedOut: true  # hpa_at_max
-              KubeNodeNotReady: true  # node_not_ready
-              KubeNodePressure: true  # node_pressure
-              KubeNodeUnreachable: true  # node_not_ready
-              KubePersistentVolumeFillingUp: true  # pvc_near_full_*
-              KubePodCrashLooping: true  # pod_crash_looping
-              # statefulset_under_replicated
-              KubeStatefulSetReplicasMismatch: true
-              NodeFilesystemAlmostOutOfSpace: true  # node_disk_full
-              NodeFilesystemSpaceFillingUp: true  # node_disk_full
-              NodeMemoryHighUtilization: true  # node_memory_high
-              NodeNetworkReceiveErrs: true  # node_network_errors
-              NodeNetworkTransmitErrs: true  # node_network_errors
-              TargetDown: true  # scrape_target_down
+            rules:
+              alertmanager: false
+              configReloaders: false
+              etcd: false
+              general: false
+              kubeApiserverSlos: false
+              kubeControllerManager: false
+              kubeProxy: false
+              kubeSchedulerAlerting: false
+              kubeStateMetrics: false
+              kubernetesApps: false
+              kubernetesResources: false
+              kubernetesStorage: false
+              kubernetesSystem: false
+              network: false
+              nodeExporterAlerting: false
+              prometheus: false
+              prometheusOperator: false
+              windows: false
 
           # Series reduction (2026-10-03): 158k active series, and only 303
           # of 2,483 metric names are used by any rule or dashboard.
@@ -171,76 +168,9 @@ spec:
                 check_for_updates: false
                 reporting_enabled: false
 
-          # AlertManager Configuration
+          # Off: Grafana sends every alert (see defaultRules above).
           alertmanager:
-            # AlertManager configuration via secret
-            config:
-              global:
-                resolve_timeout: 5m
-                slack_api_url_file: /etc/alertmanager/secrets/slack-webhook/url
-              route:
-                group_by: ["alertname", "cluster", "service"]
-                group_wait: 10s
-                group_interval: 10s
-                repeat_interval: 12h
-                receiver: "slack-notifications"
-                routes:
-                  - match:
-                      alertname: Watchdog
-                    receiver: "null"
-                  - match:
-                      alertname: InfoInhibitor
-                    receiver: "null"
-                  - match:
-                      severity: critical
-                    receiver: "slack-notifications"
-                    continue: true
-              receivers:
-                - name: "null"
-                - name: "slack-notifications"
-                  slack_configs:
-                    - channel: "#homelab-alerts"
-                      title: "Homelab Alert: {{ .GroupLabels.alertname }}"
-                      text: >-
-                        {{ range .Alerts }}
-                          *Alert:* {{ .Labels.alertname }}
-                          *Severity:* {{ .Labels.severity }}
-                          *Summary:* {{ .Annotations.summary }}
-                          *Description:* {{ .Annotations.description }}
-                          *Node:* {{ .Labels.node }}
-                        {{ end }}
-                      send_resolved: true
-
-            # Ingress for AlertManager UI
-            ingress:
-              enabled: true
-              ingressClassName: traefik
-              hosts:
-                - alertmanager.mosher-labs.local
-
-            alertmanagerSpec:
-              # External URL so Slack notification links resolve outside the
-              # cluster (defaults to the internal Service DNS name otherwise)
-              externalUrl: "http://alertmanager.mosher-labs.local"
-              # Mount slack webhook secret
-              secrets:
-                - slack-webhook
-              # Resource limits
-              resources:
-                limits:
-                  cpu: 100m
-                  memory: 128Mi
-                requests:
-                  cpu: 50m
-                  memory: 64Mi
-              # Storage
-              storage:
-                volumeClaimTemplate:
-                  spec:
-                    accessModes: ["ReadWriteOnce"]
-                    resources:
-                      requests:
-                        storage: 2Gi
+            enabled: false
 
           # Disable k3s-incompatible components
           # k3s doesn't expose these as separate pods
