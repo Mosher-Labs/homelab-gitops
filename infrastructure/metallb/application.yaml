@@ -36,15 +36,18 @@ spec:
                 cpu: 50m
                 memory: 64Mi
 
-          # Controller resources
+          # Controller resources. It uses a steady 97-104Mi (10 days of data),
+          # so the request is 1.25x that and the limit 1.5x the peak, rounded
+          # to the usual sizes. At the old 128Mi limit it sat at 81% and
+          # alerted.
           controller:
             resources:
               limits:
                 cpu: 100m
-                memory: 128Mi
+                memory: 192Mi
               requests:
                 cpu: 50m
-                memory: 64Mi
+                memory: 128Mi
 
   destination:
     server: https://kubernetes.default.svc
