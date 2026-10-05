@@ -39,6 +39,14 @@ spec:
             tokenExistingSecret: datadog-cluster-agent-token  # checkov:skip=CKV_SECRET_6: The name of a Secret, not a secret value
 
           agents:
+            # The host's systemd socket, for the systemd check below.
+            volumeMounts:
+              - name: systemd
+                mountPath: /host/run/systemd/
+            volumes:
+              - name: systemd
+                hostPath:
+                  path: /run/systemd/
             containers:
               agent:
                 resources:
@@ -62,6 +70,17 @@ spec:
               tlsVerify: false
             kubeStateMetricsCore:
               enabled: true
+            # The systemd check (homelab-gitops#173), for the units that the
+            # "systemd service failed" monitor watches. A regex matches only
+            # the units a node has: k3s on the control plane, k3s-agent on the
+            # other node. Tested with a throwaway Agent pod on both nodes.
+            confd:
+              systemd.yaml: |-
+                init_config:
+                instances:
+                  - unit_regexes:
+                      - '^(k3s|k3s-agent|chrony|systemd-timesyncd|ssh)\.service$'
+                    private_socket: /host/run/systemd/private
             # Service Discovery is on by default in new Agents. It runs the
             # system-probe container with extra capabilities, which the
             # monitors don't need.
