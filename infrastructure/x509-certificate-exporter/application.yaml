@@ -1,0 +1,72 @@
+---
+# ArgoCD Application for x509-certificate-exporter: exports the expiry of the
+# k3s certificates (homelab-gitops#172). k3s certificates last a year, and k3s
+# renews them only when it starts within 90 days of expiry, so a long-running
+# node can still let one expire. Alerting on x509_cert_not_after is a rule in
+# the observability module (terraform-kubernetes-observability).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: x509-certificate-exporter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.enix.io
+    chart: x509-certificate-exporter
+    targetRevision: 4.2.0
+    helm:
+      valuesObject:
+        # Off: it would read every Secret in the cluster. We only need the
+        # certificate files on the nodes.
+        secretsExporter:
+          enabled: false
+
+        # The expiry alert is a rule in Grafana and Datadog, not a
+        # PrometheusRule here.
+        prometheusRules:
+          create: false
+
+        prometheusServiceMonitor:
+          create: true
+          extraLabels:
+            # kube-prometheus-stack only picks up ServiceMonitors with its
+            # release label.
+            release: kube-prometheus-stack
+
+        hostPathsExporter:
+          daemonSets:
+            # The server's certificates are on the control plane only.
+            control-plane:
+              nodeSelector:
+                node-role.kubernetes.io/control-plane: "true"
+              watchDirectories:
+                - /var/lib/rancher/k3s/server/tls
+                - /var/lib/rancher/k3s/server/tls/etcd
+                - /var/lib/rancher/k3s/server/tls/kube-controller-manager
+                - /var/lib/rancher/k3s/server/tls/kube-scheduler
+            # The kubelet's certificates are on every node, server or agent.
+            agent:
+              watchDirectories:
+                - /var/lib/rancher/k3s/agent
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
