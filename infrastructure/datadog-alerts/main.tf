@@ -1,5 +1,5 @@
 module "datadog_alerts" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/datadog?ref=a15b8ad9050ad1b750a9f9415df59a15b52ad35f" # v0.13.0
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/datadog?ref=b6689608ec9a146ceea07caed507cecf1d85832f" # v0.13.3
 
   cluster_name = "homelab"
   # The Agent (infrastructure/datadog) tags every metric kube_cluster_name:homelab.
