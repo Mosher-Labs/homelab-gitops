@@ -78,7 +78,8 @@ export TF_VAR_slack="{token=\"$(op read 'op://Mosher Home/Slack Heimdallr OAuth 
 # back to TF_VAR_webex_webhook_url if that is set).
 export TF_VAR_webex_bot_token="$(op read 'op://Mosher Home/webex heimdallr bot token/credential')"
 # The healthchecks.io check behind the heartbeat (required).
-export TF_VAR_healthchecksio_api_key="$(op read 'op://Mosher Home/helthchecks read/write token/credential')"
+# op read can't take this item's name: the "/" in "read/write" splits the path.
+export TF_VAR_healthchecksio_api_key="$(op item get 'helthchecks read/write token' --vault 'Mosher Home' --fields credential --reveal)"
 terraform init
 terraform plan
 terraform apply
