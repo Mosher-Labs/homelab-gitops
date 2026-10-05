@@ -25,6 +25,11 @@ spec:
         secretsExporter:
           enabled: false
 
+        # Also expose x509_cert_expires_in_seconds. Datadog queries can't
+        # use time(), so its monitors read this metric instead of
+        # x509_cert_not_after.
+        exposeRelativeMetrics: true
+
         # The expiry alert is a rule in Grafana and Datadog, not a
         # PrometheusRule here.
         prometheusRules:
@@ -38,6 +43,28 @@ spec:
             release: kube-prometheus-stack
 
         hostPathsExporter:
+          # The Datadog Agent on each node scrapes the exporter pod on its
+          # own node (infrastructure/datadog has no check for it). The
+          # metric reaches Datadog as x509.cert_expires_in_seconds, which the
+          # certificate monitors in modules/datadog read.
+          podAnnotations:
+            ad.datadoghq.com/x509-certificate-exporter.checks: |
+              {
+                "openmetrics": {
+                  "instances": [
+                    {
+                      "openmetrics_endpoint": "http://%%host%%:9793/metrics",
+                      "namespace": "x509",
+                      "metrics": [
+                        {
+                          "x509_cert_expires_in_seconds":
+                            "cert_expires_in_seconds"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
           daemonSets:
             # The server's certificates are on the control plane only.
             control-plane:
