@@ -1,0 +1,111 @@
+---
+# ArgoCD Application for the Datadog Agent, on the free trial. It sends
+# cluster metrics to Datadog, where infrastructure/datadog-alerts' monitors
+# (modules/datadog in terraform-kubernetes-observability) alert on them.
+# See README.md.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: datadog
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # The API key and the Cluster Agent token, as SealedSecrets.
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: infrastructure/datadog/manifests
+
+    - repoURL: https://helm.datadoghq.com
+      chart: datadog
+      targetRevision: 3.251.1
+      helm:
+        valuesObject:
+          clusterAgent:
+            enabled: true
+            resources:
+              limits:
+                cpu: 200m
+                memory: 256Mi
+              requests:
+                cpu: 50m
+                memory: 128Mi
+            # A fixed token. Without it the chart generates one on every
+            # render, which keeps the app OutOfSync and rolls the pods.
+            tokenExistingSecret: datadog-cluster-agent-token
+
+          agents:
+            containers:
+              agent:
+                resources:
+                  limits:
+                    cpu: 300m
+                    memory: 512Mi
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+
+          datadog:
+            apiKeyExistingSecret: datadog-secret
+            # The monitors in infrastructure/datadog-alerts match this as
+            # kube_cluster_name.
+            clusterName: homelab
+            # k3s runs its own containerd, and its kubelet serves a
+            # self-signed certificate.
+            criSocketPath: /run/k3s/containerd/containerd.sock
+            kubelet:
+              tlsVerify: false
+            kubeStateMetricsCore:
+              enabled: true
+            # Service Discovery is on by default in new Agents. It runs the
+            # system-probe container with extra capabilities, which the
+            # monitors don't need.
+            discovery:
+              enabled: false
+            # Logs stay in Loki, and traces in the OpenTelemetry collector.
+            logs:
+              enabled: false
+            apm:
+              portEnabled: false
+              socketEnabled: false
+            processAgent:
+              enabled: false
+            site: datadoghq.com
+
+          operator:
+            resources:
+              limits:
+                cpu: 100m
+                memory: 128Mi
+              requests:
+                cpu: 20m
+                memory: 64Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: datadog
+
+  # The chart puts a new random install ID in this ConfigMap on every render.
+  ignoreDifferences:
+    - kind: ConfigMap
+      name: datadog-installinfo
+      jsonPointers:
+        - /data
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
