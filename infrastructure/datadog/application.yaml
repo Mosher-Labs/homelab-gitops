@@ -35,7 +35,8 @@ spec:
                 memory: 128Mi
             # A fixed token. Without it the chart generates one on every
             # render, which keeps the app OutOfSync and rolls the pods.
-            tokenExistingSecret: datadog-cluster-agent-token
+            # yamllint disable-line rule:line-length
+            tokenExistingSecret: datadog-cluster-agent-token  # checkov:skip=CKV_SECRET_6: The name of a Secret, not a secret value
 
           agents:
             containers:
@@ -49,7 +50,8 @@ spec:
                     memory: 256Mi
 
           datadog:
-            apiKeyExistingSecret: datadog-secret
+            # yamllint disable-line rule:line-length
+            apiKeyExistingSecret: datadog-secret  # checkov:skip=CKV_SECRET_6: The name of a Secret, not a secret value
             # The monitors in infrastructure/datadog-alerts match this as
             # kube_cluster_name.
             clusterName: homelab
