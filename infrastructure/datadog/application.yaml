@@ -26,13 +26,16 @@ spec:
         valuesObject:
           clusterAgent:
             enabled: true
+            # It sits at 165-195Mi (peak 211Mi sampled) and was OOM killed at
+            # the old 256Mi limit, so: request 1.25x the average, and a limit
+            # with room above the peak, rounded to the usual sizes.
             resources:
               limits:
                 cpu: 200m
-                memory: 256Mi
+                memory: 384Mi
               requests:
                 cpu: 50m
-                memory: 128Mi
+                memory: 256Mi
             # A fixed token. Without it the chart generates one on every
             # render, which keeps the app OutOfSync and rolls the pods.
             # yamllint disable-line rule:line-length
@@ -70,12 +73,6 @@ spec:
               tlsVerify: false
             kubeStateMetricsCore:
               enabled: true
-            # New Agents don't send the datadog.agent.check_status service
-            # check by default. The "Metrics target down" monitor reads it
-            # (homelab-gitops#26 in terraform-kubernetes-observability).
-            env:
-              - name: DD_INTEGRATION_CHECK_STATUS_ENABLED
-                value: "true"
             # The systemd check (homelab-gitops#173), for the units that the
             # "systemd service failed" monitor watches. A regex matches only
             # the units a node has: k3s on the control plane, k3s-agent on the
