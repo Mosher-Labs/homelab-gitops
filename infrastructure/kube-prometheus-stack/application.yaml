@@ -189,6 +189,34 @@ spec:
           nodeExporter:
             enabled: true
 
+          # The systemd collector (homelab-gitops#173): node_systemd_unit_state
+          # for the units the node_systemd_service_failed rule watches. k3s on
+          # the control plane, k3s-agent on the other node, plus time sync and
+          # ssh. A unit a node doesn't have just doesn't appear.
+          prometheus-node-exporter:
+            containerSecurityContext:
+              # Ubuntu's default container AppArmor profile blocks D-Bus
+              # ("An AppArmor policy prevents this sender from sending this
+              # message"), so the collector can't connect. Tested on both
+              # nodes with a throwaway pod: Unconfined is what lets it
+              # connect, as a non-root user with a read-only filesystem.
+              appArmorProfile:
+                type: Unconfined
+            extraArgs:
+              # The chart's defaults, repeated because a list replaces them.
+              # yamllint disable-line rule:line-length
+              - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+              # yamllint disable-line rule:line-length
+              - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
+              - --collector.systemd
+              - '--collector.systemd.unit-include=^(k3s|k3s-agent|chrony|systemd-timesyncd|ssh)\.service$'
+            extraHostVolumeMounts:
+              - name: dbus
+                hostPath: /run/dbus/system_bus_socket
+                mountPath: /var/run/dbus/system_bus_socket
+                readOnly: true
+                type: Socket
+
           # Kube-state-metrics - collects K8s object metrics
           kube-state-metrics:
             resources:
