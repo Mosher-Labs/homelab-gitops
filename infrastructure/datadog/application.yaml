@@ -52,12 +52,17 @@ spec:
                   path: /run/systemd/
             containers:
               agent:
+                # It averages 55-105m, with 1-minute peaks of 115-185m, but its
+                # checks run in short bursts, and at the old 300m limit 20-25%
+                # of CPU periods were throttled, which alerted. Request 1.5x
+                # the average, and limit 2x the peak, rounded to the usual
+                # sizes.
                 resources:
                   limits:
-                    cpu: 300m
+                    cpu: 500m
                     memory: 512Mi
                   requests:
-                    cpu: 100m
+                    cpu: 200m
                     memory: 256Mi
 
           datadog:
