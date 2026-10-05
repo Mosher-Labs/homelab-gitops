@@ -1,5 +1,5 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=0ee4a1023a8b64f62ec301b9edc7278e195341f3" # v0.13.5
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=df6d0072f4c462372547553a8940db1f7d5d9418" # v0.15.0
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
