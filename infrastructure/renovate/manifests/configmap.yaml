@@ -125,6 +125,12 @@ data:
           "automerge": false
         },
         {
+          "description": "Reusable Terraform modules keep version ranges (>=, ~>) in versions.tf so consumers can resolve them; replace the bound instead of pinning it to an exact version",
+          "matchManagers": ["terraform"],
+          "matchFileNames": ["**/modules/**", "versions.tf"],
+          "rangeStrategy": "replace"
+        },
+        {
           "description": "Pre-commit hooks - major, minor, and patch",
           "matchFileNames": [
             "**/.pre-commit-config.yaml"
