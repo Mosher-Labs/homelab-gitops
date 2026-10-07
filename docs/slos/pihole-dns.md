@@ -37,7 +37,7 @@ number is an estimate. It has not been checked against how often the network
 actually has problems.
 
 The SLI is a synthetic probe, not the real queries. Pi-hole's own statistics
-(`pihole_query_count`, `pihole_query_replies`) are gauges over a 24-hour
+(`pihole_query_count`, `pihole_query_replies`, from [pihole6-exporter](https://github.com/Mosher-Labs/pihole6-exporter)) are gauges over a 24-hour
 window, so the share of SERVFAIL and REFUSED replies reacts too slowly for
 burn-rate windows. In the last 7 days there were no SERVFAIL or REFUSED replies.
 
@@ -46,7 +46,7 @@ burn-rate windows. In the last 7 days there were no SERVFAIL or REFUSED replies.
 Error budget = 100% minus the SLO. For 99.9% over 30 days, the budget is about
 43 minutes, which is about 43 failed probes at one probe a minute.
 
-What happens when the budget is spent: see the error budget policy.
+What happens when the budget is spent: see the [error budget policy](error-budget-policy.md).
 
 ## Alerting
 
@@ -68,9 +68,11 @@ Rules are rendered by `modules/slo` in `infrastructure/observability-alerts`
 
 - The probe runs inside the cluster, so a network problem outside it, such as
   the LoadBalancer address or the router, is not measured.
-- The blackbox exporter itself failing counts as failed probes, because a
-  missing `probe_success` series gives no data and the alert stays quiet. The
-  existing scrape target down alerts cover that case.
+- If the blackbox exporter itself fails, `probe_success` has no data and these
+  alerts stay quiet. The [`scrape_target_down` alert](https://github.com/Mosher-Labs/terraform-kubernetes-observability/blob/v0.16.0/modules/catalog/catalog.tf)
+  in the module's catalog covers that case.
+- There is no Datadog side yet: the probe metric is not in Datadog. See
+  [homelab-gitops#196](https://github.com/Mosher-Labs/homelab-gitops/issues/196).
 - The probe asks for one name. A broken upstream for other names is not seen.
 
 ## Review log
