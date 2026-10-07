@@ -44,7 +44,7 @@ module "observability" {
 
 # Burn-rate alerts for the homelab's SLOs; see locals.tf and docs/slos.
 module "slo" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=72b54ca473dd25184b222d4be34f90a8be44182d" # PR #46, bump to the release once merged
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=0f7981bd7b335e6c95ee03660ac8bec1d1501102" # PR #46, bump to the release once merged
 
   slos = local.slos
 }

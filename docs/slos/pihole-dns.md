@@ -54,7 +54,7 @@ What happens when the budget is spent: see the error budget policy.
 | --- | --- | --- | --- | --- |
 | Fast burn | none | none | none | Not used |
 | Medium burn | 6 | 6h | 30m | Page |
-| Slow burn | 1 | 3d | 6h | Ticket |
+| Slow burn | 3 | 1d | 2h | Ticket |
 
 The fast burn alert is left out. With a probe a minute, one failed probe in an
 hour is a 1.7% error rate, a burn rate of 16.7, so a single blip would page.

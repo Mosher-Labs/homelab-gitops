@@ -87,8 +87,10 @@ locals {
       # One DNS probe a minute from the blackbox exporter. The fast tier is left
       # out: a single failed probe in an hour would be a burn rate of 16.7 and
       # page for a blip.
-      error_ratio = "1 - avg_over_time(probe_success{target=\"pihole-dns\"}[$${window}])"
-      tiers       = ["medium", "slow"]
+      grafana = {
+        error_ratio = "1 - avg_over_time(probe_success{target=\"pihole-dns\"}[$${window}])"
+      }
+      tiers = ["medium", "slow"]
     }
   }
 }
