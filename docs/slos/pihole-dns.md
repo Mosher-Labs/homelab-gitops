@@ -37,9 +37,11 @@ number is an estimate. It has not been checked against how often the network
 actually has problems.
 
 The SLI is a synthetic probe, not the real queries. Pi-hole's own statistics
-(`pihole_query_count`, `pihole_query_replies`, from [pihole6-exporter](https://github.com/Mosher-Labs/pihole6-exporter)) are gauges over a 24-hour
-window, so the share of SERVFAIL and REFUSED replies reacts too slowly for
-burn-rate windows. In the last 7 days there were no SERVFAIL or REFUSED replies.
+(`pihole_query_count` and `pihole_query_replies`, from
+[pihole6-exporter](https://github.com/Mosher-Labs/pihole6-exporter)) are gauges
+over a 24-hour window, so the share of SERVFAIL and REFUSED replies reacts too
+slowly for burn-rate windows. In the last 7 days there were no SERVFAIL or
+REFUSED replies.
 
 ## Error budget
 
