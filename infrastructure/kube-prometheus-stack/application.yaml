@@ -95,9 +95,14 @@ spec:
           # Prometheus Server Configuration
           prometheus:
             prometheusSpec:
-              # Data retention
-              retention: 14d
-              retentionSize: "10GB"
+              # Data retention. 91 days covers every SLO window (7, 30 and 90
+              # days; see docs/slos). 14 days used 5.3 GB (2026-10-06), so 91
+              # days is an estimated 35 GB. retentionSize is the hard cap,
+              # above that estimate. Prometheus runs on hp-elitedesk, whose
+              # disk has 1.8 TB free. The local-path volume doesn't enforce the
+              # 15Gi claim below, so the node's disk is the real limit.
+              retention: 91d
+              retentionSize: "50GB"
               # Storage
               storageSpec:
                 volumeClaimTemplate:
