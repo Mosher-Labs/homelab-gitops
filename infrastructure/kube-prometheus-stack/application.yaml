@@ -95,9 +95,11 @@ spec:
           # Prometheus Server Configuration
           prometheus:
             prometheusSpec:
-              # Data retention
-              retention: 14d
-              retentionSize: "10GB"
+              # Data retention. 31 days covers the 30-day SLO windows (see
+              # docs/slos). 14 days used 5.3 GB (2026-10-06), so 31 days is
+              # about 12 GB on the 15Gi volume.
+              retention: 31d
+              retentionSize: "13GB"
               # Storage
               storageSpec:
                 volumeClaimTemplate:
