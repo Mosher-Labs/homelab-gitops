@@ -1,5 +1,5 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=e745fef2fb576de60a53e9fba3a256a63b16a286" # v0.15.1
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=8f97f8f3f35eeba86e25c4898974212338260d78" # PR #46 (v0.15.1 plus modules/slo), bump to the release once merged
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
@@ -13,6 +13,8 @@ module "observability" {
   dashboards = {
     # Adds an error-logs panel from infrastructure/loki.
     loki_datasource_uid = "loki"
+    # An SLO row for each SLO in locals.tf.
+    slos = module.slo.dashboard_slos
   }
   # Each channel is on when its TF_VAR_ is set; see RUNBOOK.md.
   notifications = {
@@ -44,7 +46,7 @@ module "observability" {
 
 # Burn-rate alerts for the homelab's SLOs; see locals.tf and docs/slos.
 module "slo" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=0f7981bd7b335e6c95ee03660ac8bec1d1501102" # PR #46, bump to the release once merged
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=8f97f8f3f35eeba86e25c4898974212338260d78" # PR #46, bump to the release once merged
 
   slos = local.slos
 }
