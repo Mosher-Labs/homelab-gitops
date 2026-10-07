@@ -6,7 +6,7 @@ module "observability" {
     # serve OpenTelemetry-style request metrics. Today that's LiftTrace.
     apm = { enabled = true }
     # Homelab-specific rules; see locals.tf.
-    custom_rules = local.custom_rules
+    custom_rules = merge(local.custom_rules, module.slo.custom_rules)
   }
   cluster_name = "homelab"
   cluster_type = "k3s"
@@ -40,4 +40,11 @@ module "observability" {
     } : var.webex_webhook_url != null ? {
     webhook_url = var.webex_webhook_url
   } : null
+}
+
+# Burn-rate alerts for the homelab's SLOs; see locals.tf and docs/slos.
+module "slo" {
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=72b54ca473dd25184b222d4be34f90a8be44182d" # PR #46, bump to the release once merged
+
+  slos = local.slos
 }
