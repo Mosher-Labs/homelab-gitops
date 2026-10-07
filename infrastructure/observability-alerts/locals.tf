@@ -77,3 +77,24 @@ locals {
   # needs the bot token.
   webex_room_id = "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1JPT00vNTg1NzRlYTAtYmViOS0xMWYxLWExMjMtNzMwYWE2OGZkMjY3"
 }
+
+locals {
+  # SLOs with burn-rate alerts. Each has a document in docs/slos, such as
+  # docs/slos/pihole-dns.md.
+  slos = {
+    pihole_dns = {
+      title  = "Pi-hole DNS"
+      target = 0.999
+      # One DNS probe a minute from the blackbox exporter. The fast tier is left
+      # out: a single failed probe in an hour would be a burn rate of 16.7 and
+      # page for a blip.
+      # No datadog block yet: the probe metric is not in Datadog, and a
+      # service check has no good and total counts. Tracked in
+      # Mosher-Labs/homelab-gitops#196.
+      grafana = {
+        error_ratio = "1 - avg_over_time(probe_success{target=\"pihole-dns\"}[$${window}])"
+      }
+      tiers = ["medium", "slow"]
+    }
+  }
+}

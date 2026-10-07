@@ -1,18 +1,20 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=e745fef2fb576de60a53e9fba3a256a63b16a286" # v0.15.1
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=fd7b3fd94fb3650442618ed2463f675b1379a673" # v0.16.0
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
     # serve OpenTelemetry-style request metrics. Today that's LiftTrace.
     apm = { enabled = true }
     # Homelab-specific rules; see locals.tf.
-    custom_rules = local.custom_rules
+    custom_rules = merge(local.custom_rules, module.slo.custom_rules)
   }
   cluster_name = "homelab"
   cluster_type = "k3s"
   dashboards = {
     # Adds an error-logs panel from infrastructure/loki.
     loki_datasource_uid = "loki"
+    # An SLO row for each SLO in locals.tf.
+    slos = module.slo.dashboard_slos
   }
   # Each channel is on when its TF_VAR_ is set; see RUNBOOK.md.
   notifications = {
@@ -40,4 +42,12 @@ module "observability" {
     } : var.webex_webhook_url != null ? {
     webhook_url = var.webex_webhook_url
   } : null
+}
+
+# Burn-rate alerts for the homelab's SLOs, defined in locals.tf and
+# documented in docs/slos.
+module "slo" {
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=fd7b3fd94fb3650442618ed2463f675b1379a673" # v0.16.0
+
+  slos = local.slos
 }
