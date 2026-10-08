@@ -24,7 +24,7 @@ Rolling 30 days.
 
 | Category | SLI (what we measure) | How it is calculated | Data source | SLO |
 | --- | --- | --- | --- | --- |
-| Availability | Share of DNS probes that get a NOERROR answer for `example.com` | probes that succeeded / all probes | `probe_success{target="pihole-dns"}` from the blackbox exporter, one probe a minute | 99.9% |
+| Availability | Share of DNS probes that get a NOERROR answer for `example.com` | probes that succeeded / all probes | `probe_success{target="pihole-dns"}` from the blackbox exporter, one probe every 10 seconds | 99.9% |
 
 A valid event is one probe. A good event is a probe that gets NOERROR within
 the 5 second timeout. All probes count, so a missing probe is a failure.
@@ -46,7 +46,7 @@ REFUSED replies.
 ## Error budget
 
 Error budget = 100% minus the SLO. For 99.9% over 30 days, the budget is about
-43 minutes, which is about 43 failed probes at one probe a minute.
+43 minutes, which is about 259 failed probes at one probe every 10 seconds.
 
 What happens when the budget is spent: see the [error budget policy](error-budget-policy.md).
 
@@ -54,14 +54,19 @@ What happens when the budget is spent: see the [error budget policy](error-budge
 
 | Alert | Burn rate | Long window | Short window | Action |
 | --- | --- | --- | --- | --- |
-| Fast burn | none | none | none | Not used |
+| Fast burn | 14.4 | 1h | 5m | Page |
 | Medium burn | 6 | 6h | 30m | Page |
 | Slow burn | 3 | 1d | 2h | Ticket |
 
-The fast burn alert is left out. With a probe a minute, one failed probe in an
-hour is a 1.7% error rate, a burn rate of 16.7, so a single blip would page.
-The medium alert needs about 3 failed probes in 6 hours, which separates a
-sustained problem from a blip.
+The probe runs every 10 seconds, which is 360 samples an hour. That is why the fast alert can stay on: at
+one probe a minute, a single failed probe in an hour would be a 1.7% error rate, a burn rate of 16.7, and a
+blip would page. At 10 seconds, the long window of each alert needs about:
+
+| Alert | Failed probes in the long window | Roughly |
+| --- | --- | --- |
+| Fast burn | 6 in an hour | 1 minute of DNS down |
+| Medium burn | 13 in 6 hours | 2 minutes |
+| Slow burn | 26 in a day | 4 minutes |
 
 Rules are rendered by `modules/slo` in `infrastructure/observability-alerts`
 (`locals.tf`, `main.tf`). Runbook: [RUNBOOK.md](../../infrastructure/observability-alerts/RUNBOOK.md).
@@ -76,6 +81,9 @@ Rules are rendered by `modules/slo` in `infrastructure/observability-alerts`
 - There is no Datadog side yet: the probe metric is not in Datadog. See
   [homelab-gitops#196](https://github.com/Mosher-Labs/homelab-gitops/issues/196).
 - The probe asks for one name. A broken upstream for other names is not seen.
+- The probe is synthetic traffic. A successful probe can hide a failure that real clients see, such as one
+  upstream resolver timing out for some domains. A second SLI from the real queries is tracked in
+  [homelab-gitops#200](https://github.com/Mosher-Labs/homelab-gitops/issues/200).
 
 ## Review log
 
