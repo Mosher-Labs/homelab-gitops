@@ -86,6 +86,12 @@ spec:
             - name: pihole-dns
               url: pihole-dns-udp.pihole.svc.cluster.local:53
               module: dns_example_com
+              # Every 10 seconds, not the default minute: the Pi-hole SLO's
+              # SLI is this probe, and at one a minute a single failed probe
+              # would trip the fast burn alert. scrapeTimeout has to stay
+              # under interval.
+              interval: 10s
+              scrapeTimeout: 8s
             - name: pihole-web
               url: http://pihole-web.pihole.svc.cluster.local/admin/
               module: http_2xx

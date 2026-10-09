@@ -85,16 +85,15 @@ locals {
     pihole_dns = {
       title  = "Pi-hole DNS"
       target = 0.999
-      # One DNS probe a minute from the blackbox exporter. The fast tier is left
-      # out: a single failed probe in an hour would be a burn rate of 16.7 and
-      # page for a blip.
+      # One DNS probe every 10 seconds from the blackbox exporter (see
+      # infrastructure/blackbox-exporter). That is 360 samples an hour, so it
+      # takes 6 failed probes to trip the fast tier, not one.
       # No datadog block yet: the probe metric is not in Datadog, and a
       # service check has no good and total counts. Tracked in
       # Mosher-Labs/homelab-gitops#196.
       grafana = {
         error_ratio = "1 - avg_over_time(probe_success{target=\"pihole-dns\"}[$${window}])"
       }
-      tiers = ["medium", "slow"]
     }
   }
 }
