@@ -21,7 +21,7 @@ spec:
 
     - repoURL: https://helm.datadoghq.com
       chart: datadog
-      targetRevision: 3.251.1
+      targetRevision: 3.253.2
       helm:
         valuesObject:
           clusterAgent:
