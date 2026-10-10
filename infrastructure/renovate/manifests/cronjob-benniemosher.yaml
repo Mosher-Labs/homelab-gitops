@@ -37,7 +37,7 @@ spec:
             # Same image as the main container, so it is already on the node and
             # has openssl and curl without installing packages as root.
             - name: token-generator
-              image: renovate/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51  # yamllint disable-line rule:line-length
+              image: renovate/renovate:44.149.1@sha256:0423c5dfb1488df5716b6584032b3bcf7091ad7a3bc547c5707f047da7a30674  # yamllint disable-line rule:line-length
               command: ["/bin/sh", "/scripts/generate-token.sh"]
               securityContext:
                 allowPrivilegeEscalation: false
@@ -72,7 +72,7 @@ spec:
                   mountPath: /token
           containers:
             - name: renovate
-              image: renovate/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51  # yamllint disable-line rule:line-length
+              image: renovate/renovate:44.149.1@sha256:0423c5dfb1488df5716b6584032b3bcf7091ad7a3bc547c5707f047da7a30674  # yamllint disable-line rule:line-length
               command: ["/bin/sh", "-c"]
               args:
                 - |
