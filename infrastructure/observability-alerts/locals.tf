@@ -95,5 +95,18 @@ locals {
         error_ratio = "1 - avg_over_time(probe_success{target=\"pihole-dns\"}[$${window}])"
       }
     }
+    # The real queries, so a failure the probe can't see (one upstream failing
+    # for some domains) still counts. pihole_query_reply_1m is a count of
+    # replies for the last whole minute, stamped with that minute, so the
+    # second scrape in a minute is dropped and sum_over_time counts each query
+    # once. The SERVFAIL and REFUSED series only exist after one happens, so
+    # `or vector(0)` keeps the ratio at 0 instead of empty.
+    pihole_dns_replies = {
+      title  = "Pi-hole DNS replies"
+      target = 0.999
+      grafana = {
+        error_ratio = "(sum(sum_over_time(pihole_query_reply_1m{query_reply=~\"SERVFAIL|REFUSED\"}[$${window}])) or vector(0)) / sum(sum_over_time(pihole_query_reply_1m[$${window}]))"
+      }
+    }
   }
 }
