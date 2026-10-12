@@ -1,5 +1,5 @@
 module "observability" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=140507bf904209c7829511680b3de3067ecf8b1e" # v0.18.1
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git?ref=5395a08bb3c4fc9af98405cbed867e49382816bf" # v0.19.0
 
   alerts = {
     # Service-level alerts and the dashboard's Services row, from apps that
@@ -49,7 +49,7 @@ module "observability" {
 # Burn-rate alerts for the homelab's SLOs, defined in locals.tf and
 # documented in docs/slos.
 module "slo" {
-  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=140507bf904209c7829511680b3de3067ecf8b1e" # v0.18.1
+  source = "git::https://github.com/Mosher-Labs/terraform-kubernetes-observability.git//modules/slo?ref=5395a08bb3c4fc9af98405cbed867e49382816bf" # v0.19.0
 
   slos = local.slos
 }

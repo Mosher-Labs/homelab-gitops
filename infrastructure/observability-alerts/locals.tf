@@ -112,12 +112,17 @@ locals {
     # replies for the last whole minute, stamped with that minute, so the
     # second scrape in a minute is dropped and sum_over_time counts each query
     # once. The SERVFAIL and REFUSED series only exist after one happens, so
-    # `or vector(0)` keeps the ratio at 0 instead of empty.
+    # `or vector(0)` keeps the ratio at 0 instead of empty. Traffic drops to
+    # about 140 queries an hour at night, where 3 bad replies would trip the
+    # fast tier, so each alert also needs at least 5 bad replies in its long
+    # window (Mosher-Labs/homelab-gitops#207).
     pihole_dns_replies = {
       title  = "Pi-hole DNS replies"
       target = 0.999
       grafana = {
-        error_ratio = "(sum(sum_over_time(pihole_query_reply_1m{query_reply=~\"SERVFAIL|REFUSED\"}[$${window}])) or vector(0)) / sum(sum_over_time(pihole_query_reply_1m[$${window}]))"
+        bad_events     = "sum(sum_over_time(pihole_query_reply_1m{query_reply=~\"SERVFAIL|REFUSED\"}[$${window}]))"
+        error_ratio    = "(sum(sum_over_time(pihole_query_reply_1m{query_reply=~\"SERVFAIL|REFUSED\"}[$${window}])) or vector(0)) / sum(sum_over_time(pihole_query_reply_1m[$${window}]))"
+        min_bad_events = 5
       }
     }
   }
