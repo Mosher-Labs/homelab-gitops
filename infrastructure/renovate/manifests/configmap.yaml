@@ -42,7 +42,9 @@ data:
         "@benniemosher"
       ],
       "assignAutomerge": true,
-      "reviewers": [],
+      "reviewers": [
+        "benniemosher"
+      ],
       "vulnerabilityAlerts": {
         "labels": [
           "security",
