@@ -14,7 +14,8 @@ The fast and medium alerts share this runbook. The slow alert has its own short 
 
 Too many of the real DNS queries Pi-hole answered got SERVFAIL or REFUSED, for the 99.9% SLO.
 
-- Fast: 14.4x the allowed rate over 1h and 5m. About 8 bad replies in an average hour, 3 in the quietest.
+- Fast: 14.4x the allowed rate over 1h and 5m. About 8 bad replies in an average hour, and never fewer
+  than 5, the minimum the alert needs.
 - Medium: 6x over 6h and 30m. About 20 bad replies in 6 hours.
 
 Fires when: the burn rate is over the threshold in both windows. See the
@@ -103,8 +104,8 @@ There's no one else on call. If many names fail for every device, follow
 
 ## After the alert
 
-- Was the alert noisy or not actionable? At night 3 bad replies page, so note it for the next SLO
-  review (2026-11-06) if it was one device and nothing else.
+- Was the alert noisy or not actionable? It needs at least 5 bad replies, so if it paged on one device
+  and nothing else, note it for the next SLO review (2026-11-06).
 - Did this runbook miss a step? Fix it now.
 - Does this need a postmortem? Write one if it used a large part of the budget or surprised you. Use
   the [postmortem template](https://github.com/Mosher-Labs/terraform-kubernetes-observability/blob/main/docs/templates/postmortem.md).
