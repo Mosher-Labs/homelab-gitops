@@ -94,12 +94,14 @@ of bad replies it takes changes with the hour:
 
 | Alert | Bad replies in the long window |
 | --- | --- |
-| Fast burn | 8 in an average hour, 3 in the quietest hour |
+| Fast burn | 8 in an average hour, 5 in the quietest hour (the minimum) |
 | Medium burn | about 20 in 6 hours |
 | Slow burn | about 44 in a day |
 
-Three bad replies at night pages. That is on purpose for now, since there were
-none in the last week, but revisit it if night pages turn out to be noise.
+Each of these alerts also needs at least 5 bad replies in its long window
+(`min_bad_events`). Without it, 3 bad replies in the quietest hour would page.
+The medium and slow alerts already need more than 5 at any traffic level, so
+the minimum only changes the fast alert at night.
 
 Rules are rendered by `modules/slo` in `infrastructure/observability-alerts`
 (`locals.tf`, `main.tf`). Runbooks, linked from each alert:
@@ -138,3 +140,4 @@ Running Terraform for the alerts: [RUNBOOK.md](../../infrastructure/observabilit
 | 2026-10-06 | Initial draft | Bennie Mosher |
 | 2026-10-09 | Probe every 10 seconds, fast alert on (#201) | Bennie Mosher |
 | 2026-10-10 | Second SLI from real query replies (#203) | Bennie Mosher |
+| 2026-10-11 | At least 5 bad replies before a real-query alert fires (#207) | Bennie Mosher |
