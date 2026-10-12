@@ -79,6 +79,18 @@ locals {
 }
 
 locals {
+  # Runbook for each alert that has one. Fast and medium share a runbook per
+  # SLI, since they watch the same signal; slow alerts get the short form.
+  runbook_base = "https://github.com/Mosher-Labs/homelab-gitops/blob/main/docs/runbooks/"
+  runbook_urls = {
+    pihole_dns_burn_fast           = "${local.runbook_base}pihole_dns_burn.md"
+    pihole_dns_burn_medium         = "${local.runbook_base}pihole_dns_burn.md"
+    pihole_dns_burn_slow           = "${local.runbook_base}pihole_dns_burn_slow.md"
+    pihole_dns_replies_burn_fast   = "${local.runbook_base}pihole_dns_replies_burn.md"
+    pihole_dns_replies_burn_medium = "${local.runbook_base}pihole_dns_replies_burn.md"
+    pihole_dns_replies_burn_slow   = "${local.runbook_base}pihole_dns_replies_burn_slow.md"
+  }
+
   # SLOs with burn-rate alerts. Each has a document in docs/slos, such as
   # docs/slos/pihole-dns.md.
   slos = {

@@ -102,7 +102,16 @@ Three bad replies at night pages. That is on purpose for now, since there were
 none in the last week, but revisit it if night pages turn out to be noise.
 
 Rules are rendered by `modules/slo` in `infrastructure/observability-alerts`
-(`locals.tf`, `main.tf`). Runbook: [RUNBOOK.md](../../infrastructure/observability-alerts/RUNBOOK.md).
+(`locals.tf`, `main.tf`). Runbooks, linked from each alert:
+
+| Alerts | Runbook |
+| --- | --- |
+| Probe, fast and medium | [pihole_dns_burn.md](../runbooks/pihole_dns_burn.md) |
+| Probe, slow | [pihole_dns_burn_slow.md](../runbooks/pihole_dns_burn_slow.md) |
+| Real queries, fast and medium | [pihole_dns_replies_burn.md](../runbooks/pihole_dns_replies_burn.md) |
+| Real queries, slow | [pihole_dns_replies_burn_slow.md](../runbooks/pihole_dns_replies_burn_slow.md) |
+
+Running Terraform for the alerts: [RUNBOOK.md](../../infrastructure/observability-alerts/RUNBOOK.md).
 
 ## Dependencies and caveats
 
