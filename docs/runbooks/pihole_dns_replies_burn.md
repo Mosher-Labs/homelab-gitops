@@ -38,7 +38,9 @@ both SLIs are burning, Pi-hole itself is the problem: start with that runbook.
    SERVFAIL points at the upstream or DNSSEC. REFUSED points at rate limiting.
 
 2. Which names and which devices? Open the Pi-hole query log, <http://pihole.mosher-labs.local/admin/queries>,
-   and filter by reply type. One device, one domain, or everything?
+   and filter by reply type. One device, one domain, or everything? If check 1 shows REFUSED and it is
+   one client, that client is probably rate limited: go to [Rate limited device](#rate-limited-device)
+   and skip check 3. The other devices resolve fine, so the upstreams are not the cause.
 
 3. Does the failing name resolve upstream? Replace `<name>` with a name from check 2:
 
@@ -55,7 +57,7 @@ both SLIs are burning, Pi-hole itself is the problem: start with that runbook.
 | --- | --- | --- |
 | A domain with broken DNSSEC (Pi-hole has `DNSSEC: "true"`) | Check 3: SERVFAIL without `+cd`, an answer with it | [Broken DNSSEC](#broken-dnssec) |
 | Upstream failing for some names | Check 3 fails both ways, and `dig @1.0.0.1 <name>` from a laptop fails too | [Upstream failing](#upstream-failing) |
-| A device sending more than 1,000 queries a minute | REFUSED in check 1, one client in check 2 | [Rate limited device](#rate-limited-device) |
+| A device sending more than 1,000 queries in 60 seconds | REFUSED in check 1, one client in check 2 | [Rate limited device](#rate-limited-device) |
 | One device asking for a name that fails | Check 2: one client, one domain | [One noisy device](#one-noisy-device) |
 | A recent change | `git log --since=1.day -- apps/pihole` in homelab-gitops | Revert the PR |
 
