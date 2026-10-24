@@ -2,6 +2,38 @@ locals {
   # Rules for this cluster that the module's catalog doesn't cover. They used to
   # be PrometheusRules in infrastructure/kube-prometheus-stack/manifests.
   custom_rules = {
+    # The API server queues requests per priority level, and a sustained queue
+    # means something is being starved of API throughput. On 2026-10-22 Grafana
+    # Alloy streamed every pod's logs through the API server, this queue sat at
+    # 121 for weeks, and the kubelet on hp-elitedesk stopped being able to write
+    # pod status: 32 pods went Ready=False, 29 services lost their endpoints,
+    # and Pi-hole's outage took battlestation's own DNS down with it. The metric
+    # was non-zero the whole time and nothing was watching it.
+    apiserver_priority_queue_backed_up = {
+      expr           = "max by (priority_level) (apiserver_flowcontrol_current_inqueue_requests)"
+      group          = "apiserver"
+      operator       = "gt"
+      pending_period = "10m"
+      severity       = "warning"
+      subject        = "{{ $labels.priority_level }}"
+      summary        = "Requests have been queueing in the API server's {{ $labels.priority_level }} priority level for 10 minutes, so something is being starved of API throughput."
+      threshold      = 0
+      title          = "API server priority queue backed up"
+    }
+    # Rejections mean requests are dropped outright rather than delayed. The
+    # counter is only created once something has been rejected, so this stays
+    # silent until it matters.
+    apiserver_requests_rejected = {
+      expr           = "sum by (priority_level, reason) (increase(apiserver_flowcontrol_rejected_requests_total[10m]))"
+      group          = "apiserver"
+      operator       = "gt"
+      pending_period = "5m"
+      severity       = "critical"
+      subject        = "{{ $labels.priority_level }}"
+      summary        = "The API server is rejecting requests in the {{ $labels.priority_level }} priority level ({{ $labels.reason }}), so clients are being dropped instead of queued."
+      threshold      = 0
+      title          = "API server rejecting requests"
+    }
     argocd_app_out_of_sync = {
       expr           = "max by (name, sync_status) (argocd_app_info{sync_status!=\"Synced\"})"
       group          = "argocd"
@@ -83,12 +115,14 @@ locals {
   # SLI, since they watch the same signal; slow alerts get the short form.
   runbook_base = "https://github.com/Mosher-Labs/homelab-gitops/blob/main/docs/runbooks/"
   runbook_urls = {
-    pihole_dns_burn_fast           = "${local.runbook_base}pihole_dns_burn.md"
-    pihole_dns_burn_medium         = "${local.runbook_base}pihole_dns_burn.md"
-    pihole_dns_burn_slow           = "${local.runbook_base}pihole_dns_burn_slow.md"
-    pihole_dns_replies_burn_fast   = "${local.runbook_base}pihole_dns_replies_burn.md"
-    pihole_dns_replies_burn_medium = "${local.runbook_base}pihole_dns_replies_burn.md"
-    pihole_dns_replies_burn_slow   = "${local.runbook_base}pihole_dns_replies_burn_slow.md"
+    apiserver_priority_queue_backed_up = "${local.runbook_base}apiserver_flowcontrol.md"
+    apiserver_requests_rejected        = "${local.runbook_base}apiserver_flowcontrol.md"
+    pihole_dns_burn_fast               = "${local.runbook_base}pihole_dns_burn.md"
+    pihole_dns_burn_medium             = "${local.runbook_base}pihole_dns_burn.md"
+    pihole_dns_burn_slow               = "${local.runbook_base}pihole_dns_burn_slow.md"
+    pihole_dns_replies_burn_fast       = "${local.runbook_base}pihole_dns_replies_burn.md"
+    pihole_dns_replies_burn_medium     = "${local.runbook_base}pihole_dns_replies_burn.md"
+    pihole_dns_replies_burn_slow       = "${local.runbook_base}pihole_dns_replies_burn_slow.md"
   }
 
   # SLOs with burn-rate alerts. Each has a document in docs/slos, such as
