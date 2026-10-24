@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: https://charts.enix.io
     chart: x509-certificate-exporter
-    targetRevision: 4.2.0
+    targetRevision: 4.2.2
     helm:
       valuesObject:
         # Off: it would read every Secret in the cluster. We only need the
