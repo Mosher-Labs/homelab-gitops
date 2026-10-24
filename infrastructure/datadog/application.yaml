@@ -26,6 +26,14 @@ spec:
         valuesObject:
           clusterAgent:
             enabled: true
+            # APM, logs and the process agent are all off below, so the only
+            # thing the admission controller would inject is APM config and
+            # standard tags nothing reads. Left on, it puts three pod-mutating
+            # webhooks in the path of every pod creation; when the cluster agent
+            # has no endpoints they each burn their 10s timeout and pod creation
+            # fails cluster-wide, which blocked recovery on 2026-10-22.
+            admissionController:
+              enabled: false
             # It sits at 165-195Mi (peak 211Mi sampled) and was OOM killed at
             # the old 256Mi limit, so: request 1.25x the average, and a limit
             # with room above the peak, rounded to the usual sizes.
