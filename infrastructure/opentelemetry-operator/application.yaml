@@ -20,6 +20,16 @@ spec:
     helm:
       valuesObject:
         admissionWebhooks:
+          # Only book-review-publisher opts into auto-instrumentation, via the
+          # instrumentation.opentelemetry.io/inject-sdk annotation. Unscoped,
+          # mpod.kb.io intercepts every pod CREATE in the cluster and burns its
+          # 10s timeout whenever the operator has no endpoints, which helped
+          # block pod creation during the 2026-10-22 outage. Add a namespace
+          # here if another workload starts opting in.
+          pods:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: book-review-publisher
           # No cert-manager here: the chart generates the webhook
           # certificate itself.
           autoGenerateCert:
