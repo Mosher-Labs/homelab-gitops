@@ -77,9 +77,6 @@ spec:
             - name: grafana
               url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
               module: http_2xx
-            - name: home-assistant
-              url: http://home-assistant.home-assistant.svc.cluster.local:8123/
-              module: http_2xx
             - name: homebridge
               url: http://homebridge.homebridge.svc.cluster.local:8581/
               module: http_2xx
