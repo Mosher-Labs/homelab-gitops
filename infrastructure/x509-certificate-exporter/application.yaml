@@ -43,6 +43,18 @@ spec:
             release: kube-prometheus-stack
 
         hostPathsExporter:
+          # Sampled over 6h: 9.7-12.4 MB working set and 0.4-1.3 millicores
+          # across all three DaemonSet pods. It reads cert files on a 300s
+          # interval, so there is no hot path. These are the smallest sane
+          # values with room for a parsing spike. Applies to every
+          # hostPathsExporter DaemonSet, agent and control-plane alike.
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
           # The Datadog Agent on each node scrapes the exporter pod on its
           # own node (infrastructure/datadog has no check for it). The
           # metric reaches Datadog as x509.cert_expires_in_seconds, which the
