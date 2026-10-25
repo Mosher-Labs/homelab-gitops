@@ -17,9 +17,9 @@ spec:
   source:
     # Your helm-charts repository
     repoURL: https://github.com/Mosher-Labs/helm-charts.git
-    # Which branch/tag to use - temporarily using feature branch for testing
-    # Change back to 'main' after merging the PR
-    targetRevision: main
+    # Pinned to a tag, not main: tracking a branch means any push to
+    # helm-charts deploys itself here with no review. Renovate bumps it.
+    targetRevision: v0.9.17
     # Path to the hello-world chart within the repo
     path: hello-world
     # This tells ArgoCD it's a Helm chart
