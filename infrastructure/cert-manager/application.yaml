@@ -1,0 +1,78 @@
+---
+# ArgoCD Application for cert-manager. Installed so the OpenTelemetry operator
+# can get its webhook certificate from cert-manager instead of the chart's
+# autoGenerateCert, which regenerated a new cert on every ArgoCD render and
+# drifted out of step with the webhooks' caBundle (see
+# infrastructure/opentelemetry-operator).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    # Ahead of everything that asks cert-manager for a Certificate. The CRDs
+    # have to exist before the OpenTelemetry operator renders one.
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.21.3
+    helm:
+      valuesObject:
+        # The chart does not install CRDs by default. keep: true leaves them
+        # behind if this app is ever removed, so existing Certificates are not
+        # deleted out from under their consumers.
+        crds:
+          enabled: true
+          keep: true
+
+        # No observed data yet; these are starting points to be tuned once it
+        # has run for a while. cainjector is the memory-hungry one, since it
+        # caches every CRD in the cluster.
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 20m
+            memory: 64Mi
+        webhook:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 20m
+              memory: 64Mi
+        cainjector:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 384Mi
+            requests:
+              cpu: 20m
+              memory: 128Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The chart installs CRDs that its own resources use.
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

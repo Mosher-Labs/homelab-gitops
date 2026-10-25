@@ -30,15 +30,22 @@ spec:
             namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: book-review-publisher
-          # No cert-manager here: the chart generates the webhook
-          # certificate itself.
+          # cert-manager issues the webhook certificate and its CA injector
+          # keeps the webhooks' caBundle in step with it. The chart's own
+          # autoGenerateCert could not be used safely: ArgoCD renders with
+          # helm template, which has no cluster access, so the chart's lookup
+          # for an existing cert always came back empty and it minted a new
+          # one on every render. recreate: false does not help, because it
+          # only guards Helm upgrades. On 2026-10-25 that left the Secret
+          # holding a cert from one render and the caBundle a CA from
+          # another, and the API server rejected the webhook.
           autoGenerateCert:
-            enabled: true
-            # The chart makes a new random certificate on every render, and
-            # ArgoCD renders often. Keep the first one (see ignoreDifferences).
-            recreate: false
-          certManager:
             enabled: false
+          certManager:
+            enabled: true
+            # Empty issuerRef means the chart's own self-signed Issuer, which
+            # is what a webhook CA should be. Nothing external to trust it.
+            issuerRef: {}
         manager:
           autoInstrumentation:
             # Off by default in the chart. Go has no in-process agent, so
@@ -57,25 +64,6 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: opentelemetry
-
-  # The generated webhook certificate differs on every render. Without this,
-  # ArgoCD would apply the Secret and the webhooks' caBundle from different
-  # renders, and the API server would reject the webhook's certificate.
-  ignoreDifferences:
-    - kind: Secret
-      name: opentelemetry-operator-controller-manager-service-cert
-      jsonPointers:
-        - /data
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-      name: opentelemetry-operator-mutation
-      jqPathExpressions:
-        - .webhooks[].clientConfig.caBundle
-    - group: admissionregistration.k8s.io
-      kind: ValidatingWebhookConfiguration
-      name: opentelemetry-operator-validation
-      jqPathExpressions:
-        - .webhooks[].clientConfig.caBundle
 
   syncPolicy:
     automated:
