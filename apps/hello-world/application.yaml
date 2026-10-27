@@ -19,7 +19,7 @@ spec:
     repoURL: https://github.com/Mosher-Labs/helm-charts.git
     # Pinned to a tag, not main: tracking a branch means any push to
     # helm-charts deploys itself here with no review. Renovate bumps it.
-    targetRevision: v0.9.17
+    targetRevision: v0.9.18
     # Path to the hello-world chart within the repo
     path: hello-world
     # This tells ArgoCD it's a Helm chart
