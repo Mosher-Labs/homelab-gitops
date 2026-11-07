@@ -1,5 +1,5 @@
 # checkov:skip=CKV_DOCKER_2: Runs as a CronJob that exits when done, so there is nothing to health-check
-FROM python:3.15-slim@sha256:533b0b2f9b5d46fd097091cf826f27902f1d6c3bca714b6dc74551356aa97a51
+FROM python:3.15-slim@sha256:e97b88e416c3c01eb427b21fd8cd3ebf006e6ee38afcfcc3cae1c54ee2ab0a75
 
 WORKDIR /app
 
