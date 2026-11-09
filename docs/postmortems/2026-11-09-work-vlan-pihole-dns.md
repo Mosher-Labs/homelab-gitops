@@ -78,7 +78,7 @@ stayed quiet the whole time, as the runbook predicts, because `example.com` kept
 | Confirm which VLAN changed on 2026-10-25 and why Pi-hole was set as its DNS | process | P1 | Bennie Mosher | #256 | 2026-11-12 |
 | Add the client-ranking query and the work VLAN cause to the runbook | process | P1 | Bennie Mosher | [#257](https://github.com/Mosher-Labs/homelab-gitops/pull/257) | 2026-11-09 |
 | Decide whether the SLI should count failed lookups from every client, and record the decision in the SLO document | prevent | P2 | Bennie Mosher | To open | 2026-12-08 |
-| Decide what to do about the 6 to 17 bad replies a day from `bennies-mbp` for VA-only names (`vaww.va.gov`) | mitigate | P2 | Bennie Mosher | To open | 2026-12-08 |
+| Answer `vaww.va.gov` locally with NXDOMAIN, so the Citrix probe from `bennies-mbp` (about 10 bad replies a day) stops spending budget | mitigate | P2 | Bennie Mosher | [#259](https://github.com/Mosher-Labs/homelab-gitops/pull/259) | 2026-11-12 |
 
 ## Lessons learned
 
