@@ -3,12 +3,12 @@
 | Field | Value |
 | --- | --- |
 | Service | Pi-hole DNS (`pihole-dns-udp.pihole.svc.cluster.local:53`, LoadBalancer `192.168.87.101`) |
-| Status | Draft |
+| Status | Approved |
 | Authors | Bennie Mosher |
 | Reviewers | Bennie Mosher |
 | Approvers | Bennie Mosher |
-| Approved on | Not yet |
-| Revisit on | 2026-11-06 |
+| Approved on | 2026-11-08 |
+| Revisit on | 2026-12-08 |
 | Error budget policy | [error-budget-policy.md](error-budget-policy.md) |
 
 ## Service overview
@@ -141,3 +141,4 @@ Running Terraform for the alerts: [RUNBOOK.md](../../infrastructure/observabilit
 | 2026-10-09 | Probe every 10 seconds, fast alert on (#201) | Bennie Mosher |
 | 2026-10-10 | Second SLI from real query replies (#203) | Bennie Mosher |
 | 2026-10-11 | At least 5 bad replies before a real-query alert fires (#207) | Bennie Mosher |
+| 2026-11-08 | Approved; moved the revisit date to 2026-12-08 | Bennie Mosher |
