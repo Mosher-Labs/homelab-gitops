@@ -6,7 +6,7 @@
 | SLO document | [pihole-dns.md](pihole-dns.md) |
 | Authors | Bennie Mosher |
 | Approvers | Bennie Mosher |
-| Approved on | Not yet |
+| Approved on | 2026-11-08 |
 | Revisit on | 2026-12-08 |
 
 ## Goals
@@ -74,4 +74,4 @@ without a review, so the next one is 2026-12-08.
 | Date | Change | Who agreed |
 | --- | --- | --- |
 | 2026-10-06 | Initial draft | Bennie Mosher |
-| 2026-11-08 | Added non-goals, disagreements, the either-SLI rule, Renovate pull requests as changes, the quarterly outage threshold, and thresholds in probes and replies. Moved the revisit date to 2026-12-08. | Not yet approved |
+| 2026-11-08 | Added non-goals, disagreements, the either-SLI rule, Renovate pull requests as changes, the quarterly outage threshold, and thresholds in probes and replies. Moved the revisit date to 2026-12-08. | Bennie Mosher |

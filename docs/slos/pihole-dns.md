@@ -141,4 +141,4 @@ Running Terraform for the alerts: [RUNBOOK.md](../../infrastructure/observabilit
 | 2026-10-09 | Probe every 10 seconds, fast alert on (#201) | Bennie Mosher |
 | 2026-10-10 | Second SLI from real query replies (#203) | Bennie Mosher |
 | 2026-10-11 | At least 5 bad replies before a real-query alert fires (#207) | Bennie Mosher |
-| 2026-11-08 | Moved the revisit date to 2026-12-08; the error budget policy was updated | Not yet approved |
+| 2026-11-08 | Moved the revisit date to 2026-12-08; the error budget policy was updated | Bennie Mosher |
