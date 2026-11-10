@@ -5,7 +5,7 @@
 | Rule IDs | `pihole_dns_replies_burn_fast`, `pihole_dns_replies_burn_medium` |
 | Severity | page |
 | Owner | Bennie Mosher |
-| Last reviewed | 2026-10-11 by Bennie Mosher |
+| Last reviewed | 2026-11-09 by Bennie Mosher |
 
 The fast and medium alerts share this runbook. The slow alert has its own short runbook:
 [pihole_dns_replies_burn_slow.md](pihole_dns_replies_burn_slow.md).
@@ -42,6 +42,18 @@ both SLIs are burning, Pi-hole itself is the problem: start with that runbook.
    one client, that client is probably rate limited: go to [Rate limited device](#rate-limited-device)
    and skip check 3. The other devices resolve fine, so the upstreams are not the cause.
 
+   The query log UI is slow for this. To rank clients and names by bad replies over the last 6 hours
+   (`reply_type` 7 is SERVFAIL and 8 is REFUSED):
+
+   ```bash
+   kubectl -n pihole exec deploy/pihole -- pihole-FTL sqlite3 /etc/pihole/pihole-FTL.db \
+     "select client, domain, count(*) n from queries where reply_type in (7,8) \
+      and timestamp > strftime('%s','now','-6 hours') group by client, domain order by n desc limit 10;"
+   ```
+
+   If the top client is on a network that should not use Pi-hole, go to
+   [A network that should not use Pi-hole](#a-network-that-should-not-use-pi-hole).
+
 3. Does the failing name resolve upstream? Replace `<name>` with a name from check 2:
 
    ```bash
@@ -59,6 +71,7 @@ both SLIs are burning, Pi-hole itself is the problem: start with that runbook.
 | Upstream failing for some names | Check 3 fails both ways, and `dig @1.0.0.1 <name>` from a laptop fails too | [Upstream failing](#upstream-failing) |
 | A device sending more than 1,000 queries in 60 seconds | REFUSED in check 1, one client in check 2 | [Rate limited device](#rate-limited-device) |
 | One device asking for a name that fails | Check 2: one client, one domain | [One noisy device](#one-noisy-device) |
+| A network that should not use Pi-hole (for example the work VLAN) | Check 2: the top client is on that network's subnet. `getent hosts <ip>` shows its name | [A network that should not use Pi-hole](#a-network-that-should-not-use-pi-hole) |
 | A recent change | `git log --since=1.day -- apps/pihole` in homelab-gitops | Revert the PR |
 
 ## Mitigations
@@ -84,6 +97,18 @@ Verify: check 1 stops growing within a few minutes.
 Pi-hole refuses a client that sends more than 1,000 queries in 60 seconds (`dns.rateLimit`). Find out
 why the device is sending that many: a stuck app or a misconfigured device. Fix or unplug the device.
 Raise the limit only if the traffic is legitimate.
+
+### A network that should not use Pi-hole
+
+A managed work laptop sent a failing reverse lookup every few minutes because its VLAN's DHCP handed out
+Pi-hole as the DNS server. Set that network to automatic DNS in UniFi. The change does not reach a client until
+it renews its lease (24 hours), so turn the client's network adapter off and on to speed it up.
+
+Verify: the client's last query in Pi-hole stops advancing, and the alert clears about 30 minutes after the last
+bad reply.
+
+Also check what else that network can reach. A device that is meant to be isolated should not be able to ping
+the main LAN.
 
 ### One noisy device
 
@@ -117,3 +142,4 @@ There's no one else on call. If many names fail for every device, follow
 | Date | What happened | Link |
 | --- | --- | --- |
 | 2026-10-11 | SLI added, alerts failure-tested in Slack and Webex | [#204](https://github.com/Mosher-Labs/homelab-gitops/pull/204) |
+| 2026-11-09 | First real firing (medium, burn rate 6.3). One work laptop sent a reverse lookup for `0.0.136.142.in-addr.arpa` about every 4 minutes, and the zone returns SERVFAIL from 1.1.1.1, 9.9.9.9, and with `+cd`. Its VLAN was set to use Pi-hole for DNS. Set it to automatic DNS in UniFi. 1,417 of the 1,676 bad replies in 30 days came from that one client and name | [#256](https://github.com/Mosher-Labs/homelab-gitops/issues/256) |
