@@ -72,6 +72,16 @@ spec:
           # Enable DNSSEC
           DNSSEC: "true"
 
+          # Answer VPN network-detection probes locally. vaww.va.gov is a
+          # VA-internal name that fails upstream (SERVFAIL), and the Citrix
+          # client on bennies-mbp asks for it every ~10 minutes. An empty
+          # address=/name/ makes dnsmasq reply NXDOMAIN without asking upstream.
+          # Do not block it instead: a block answers 0.0.0.0, which a client
+          # could read as "on the VA network". See issue #258.
+          dnsmasq:
+            customDnsEntries:
+              - address=/vaww.va.gov/
+
           # Block analytics/tracking domains for Discr development
           # This prevents home network traffic from skewing metrics
           blacklist:
