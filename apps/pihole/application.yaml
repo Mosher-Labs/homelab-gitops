@@ -100,7 +100,7 @@ spec:
               port: 9617
               image:
                 repository: ekofr/pihole-exporter
-                tag: latest@sha256:a890cc731a39da719ba19cfd717427d93366cd36307f069d495f37a1373ccffc
+                tag: latest@sha256:4233c06fcd2d62c37b9345228bc9f798b3a66d052b4955ec6a0e5b8825e20827
                 pullPolicy: IfNotPresent
               resources:
                 limits:
