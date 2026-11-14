@@ -1,0 +1,151 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: garmin-mcp
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace, sealed MCP bearer token, sealed cloudflared tunnel token,
+    # and the default-deny NetworkPolicy.
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/garmin-mcp/manifests
+
+    # bjw-s app-template: Garmin MCP has no Helm chart, same reasoning as
+    # apps/lifttrace.
+    - repoURL: ghcr.io/bjw-s-labs/helm
+      chart: app-template
+      targetRevision: 5.3.0
+      helm:
+        releaseName: garmin-mcp
+        valuesObject:
+          controllers:
+            garmin-mcp:
+              type: deployment
+              # One Garmin login and one token store on a ReadWriteOnce
+              # volume, so never two pods at once.
+              strategy: Recreate
+              containers:
+                app:
+                  image:
+                    # Taxuspt/garmin_mcp publishes no image. Built by
+                    # benniemosher/garmin_mcp's "Mosher Labs image"
+                    # workflow from branch local/mosher-labs-build:
+                    # upstream main at a2ca5fc plus only that workflow.
+                    repository: ghcr.io/benniemosher/garmin-mcp
+                    tag: mosher-labs-0a1ab82@sha256:37345ae6d8c1368c4c086c06d4174cc39c7c210c7b81bc78d4a3240967ebd259
+                  env:
+                    TZ: America/Denver
+                    GARMIN_MCP_TRANSPORT: streamable-http
+                    GARMIN_MCP_HOST: 0.0.0.0
+                    GARMIN_MCP_PORT: "8000"
+                    # claude.ai drops idle sessions; stateless mode keeps a
+                    # connector call from failing with 404 after 30 minutes
+                    # idle (upstream README, "Remote use").
+                    GARMIN_MCP_STATELESS_HTTP: "true"
+                    # Garmin's OAuth tokens, written once by garmin-mcp-auth
+                    # (RUNBOOK.md) and good for about six months. No Garmin
+                    # password is stored in the cluster.
+                    GARMINTOKENS: /data/tokens
+                    GARMINTOKENS_BASE64: /data/tokens_base64
+                    # Planning and scheduling workouts needs the workouts
+                    # tools; health, activities and training let Claude
+                    # read recovery and history to plan around.
+                    GARMIN_TOOL_PROFILE: workouts,health,activities,training
+                    # A recorded activity has no undo in Garmin Connect, and
+                    # planning never needs to delete one.
+                    GARMIN_DISABLED_TOOLS: delete_activity
+                  envFrom:
+                    - secretRef:
+                        # GARMIN_MCP_HTTP_TOKEN: the bearer token every /mcp
+                        # call must send. See RUNBOOK.md.
+                        name: garmin-mcp-secrets
+                  probes:
+                    liveness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /healthz
+                          port: 8000
+                        initialDelaySeconds: 10
+                        periodSeconds: 30
+                    # 503 until the Garmin login from the saved tokens
+                    # succeeds, so the pod is not Ready before
+                    # garmin-mcp-auth has run once.
+                    readiness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /readyz
+                          port: 8000
+                        initialDelaySeconds: 5
+                        periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 128Mi
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+
+                # cloudflared sidecar, same pattern as apps/lifttrace: it only
+                # dials out to Cloudflare, so no inbound port is opened.
+                cloudflared:
+                  image:
+                    repository: cloudflare/cloudflared
+                    tag: 2026.10.7@sha256:4955524aeaa379e154023d5a027c250f7b35041a2e7e950cf13f144bc9b9c5ba
+                  args:
+                    - tunnel
+                    - --no-autoupdate
+                    - run
+                    - --token
+                    - $(CF_TOKEN)
+                  env:
+                    CF_TOKEN:
+                      valueFrom:
+                        secretKeyRef:
+                          name: cloudflared-credentials
+                          key: tunnel-token
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 32Mi
+                    limits:
+                      cpu: 100m
+                      memory: 64Mi
+
+          # No Service or Ingress: cloudflared reaches the app over
+          # localhost:8000 inside the pod. See manifests/networkpolicy.yaml.
+
+          persistence:
+            data:
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              advancedMounts:
+                garmin-mcp:
+                  app:
+                    - path: /data
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: garmin-mcp
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

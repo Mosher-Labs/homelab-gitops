@@ -24,6 +24,17 @@ locals {
       # even with a perfectly valid app-level token.
       access_bypass_paths = ["/api/mcp"]
     }
+    garmin-mcp = {
+      zone      = "benniemosher.dev"
+      subdomain = "garmin"
+      # cloudflared talks to the MCP server over loopback inside the pod.
+      service = "http://localhost:8000"
+      # Same reason as lifttrace: claude.ai's connector cannot pass an
+      # Access login, and every /mcp call must carry the server's own
+      # GARMIN_MCP_HTTP_TOKEN bearer token. Everything else on the
+      # hostname stays behind Access.
+      access_bypass_paths = ["/mcp"]
+    }
   }
 
   zone_names = toset([for app in local.tunnel_apps : app.zone])
