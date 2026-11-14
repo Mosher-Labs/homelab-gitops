@@ -36,7 +36,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: homebridge
-          image: homebridge/homebridge:2026-11-02@sha256:169416416bf303bb64bfd6c666f64d93a4f52f54db9a64e8ad553b5dc89fcea4  # yamllint disable-line rule:line-length
+          image: homebridge/homebridge:2026-11-13@sha256:15b784180f8833891a5c467b4e1bf54c4e6da3c168595301c0f245f493c2fc09  # yamllint disable-line rule:line-length
           imagePullPolicy: Always
           env:
             - name: TZ
