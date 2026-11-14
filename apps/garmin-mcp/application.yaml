@@ -35,9 +35,10 @@ spec:
                     # Taxuspt/garmin_mcp publishes no image. Built by
                     # benniemosher/garmin_mcp's "Mosher Labs image"
                     # workflow from branch local/mosher-labs-build:
-                    # upstream main at a2ca5fc plus only that workflow.
+                    # upstream main at a2ca5fc plus that workflow and X-API-Key
+                    # auth (claude.ai reserves the Authorization header).
                     repository: ghcr.io/benniemosher/garmin-mcp
-                    tag: mosher-labs-0a1ab82@sha256:37345ae6d8c1368c4c086c06d4174cc39c7c210c7b81bc78d4a3240967ebd259
+                    tag: mosher-labs-930ce0f@sha256:9462813fde684a347280d604ee942f28543966a53dd199292fdfcb31e2495e04
                   env:
                     TZ: America/Denver
                     GARMIN_MCP_TRANSPORT: streamable-http
