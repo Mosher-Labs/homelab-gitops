@@ -155,6 +155,16 @@ Each app directory contains:
   posts completed workouts to Strava. `PUBLIC_API_ENABLED` stays off; MCP
   covers the only outside consumer so far. See `apps/lifttrace/RUNBOOK.md`
   for Tunnel/Access setup and troubleshooting.
+- **Garmin MCP** (`bjw-s-labs/app-template` chart v5.3.0 /
+  `ghcr.io/benniemosher/garmin-mcp:mosher-labs-0a1ab82`): MCP server that lets
+  Claude read Garmin Connect data and create and schedule workouts. Upstream
+  ([Taxuspt/garmin_mcp](https://github.com/Taxuspt/garmin_mcp)) publishes no
+  image; `benniemosher/garmin_mcp` builds one from branch
+  `local/mosher-labs-build`. Same lockdown pattern as LiftTrace, at
+  `garmin.benniemosher.dev` with an Access bypass for `/mcp`, which checks
+  its own bearer token (`GARMIN_MCP_HTTP_TOKEN`, sealed). Garmin OAuth tokens
+  live on the PVC from a one-time `garmin-mcp-auth`; no Garmin password in
+  the cluster. `delete_activity` is disabled. See `apps/garmin-mcp/RUNBOOK.md`.
 
 ## Smart Home Device Context
 

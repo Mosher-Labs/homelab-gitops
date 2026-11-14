@@ -1,0 +1,18 @@
+---
+# Default-deny ingress for the Garmin MCP pod. Nothing else in the cluster
+# needs to reach it: the cloudflared sidecar in the same pod talks to it over
+# localhost:8000, which this policy does not affect, and there is no Service.
+# Same pattern as apps/lifttrace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: garmin-mcp-deny-ingress
+  namespace: garmin-mcp
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: garmin-mcp
+      app.kubernetes.io/instance: garmin-mcp
+  policyTypes:
+    - Ingress
+  ingress: []
