@@ -14,8 +14,10 @@ with a `cloudflared` sidecar, the same pattern as `apps/lifttrace`.
   `local/mosher-labs-build` (upstream `main` plus one workflow,
   `.github/workflows/mosher-labs-image.yml`). The tag is
   `mosher-labs-<short sha>`, pinned by digest in `application.yaml`.
-- **Auth:** every `/mcp` call must send `Authorization: Bearer
-  <GARMIN_MCP_HTTP_TOKEN>`, checked by the server. Cloudflare Access gates the
+- **Auth:** every `/mcp` call must send the `GARMIN_MCP_HTTP_TOKEN`, checked
+  by the server, as `Authorization: Bearer <token>` or `X-API-Key: <token>`.
+  claude.ai reserves `Authorization`, so its connector uses `X-API-Key`.
+  Cloudflare Access gates the
   rest of the hostname, with a bypass for `/mcp` because the claude.ai
   connector cannot pass an Access login. `/healthz` and `/readyz` are open on
   the pod but sit behind Access on the hostname.
@@ -84,7 +86,8 @@ The MCP bearer token was generated and sealed in
 In claude.ai, Settings → Connectors → Add custom connector:
 
 - URL: `https://garmin.benniemosher.dev/mcp`
-- Token: the `GARMIN_MCP_HTTP_TOKEN` value
+- Request header: name `X-API-Key`, value the `GARMIN_MCP_HTTP_TOKEN`
+  ("Garmin MCP Homelab" in 1Password), with no `Bearer` prefix
 
 ## Rotating the MCP token
 
