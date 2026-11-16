@@ -86,8 +86,12 @@ The MCP bearer token was generated and sealed in
 In claude.ai, Settings → Connectors → Add custom connector:
 
 - URL: `https://garmin.benniemosher.dev/mcp`
+- Authentication: "No sign-in required". With any OAuth option selected,
+  claude.ai drops custom headers and tries to register an OAuth client,
+  which fails with "Couldn't register with ... sign-in service".
 - Request header: name `X-API-Key`, value the `GARMIN_MCP_HTTP_TOKEN`
-  ("Garmin MCP Homelab" in 1Password), with no `Bearer` prefix
+  ("Garmin MCP Homelab" in 1Password), with no `Bearer` prefix.
+  `Authorization` is a reserved header name in claude.ai.
 
 ## Rotating the MCP token
 
