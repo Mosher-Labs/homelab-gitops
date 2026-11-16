@@ -149,9 +149,12 @@ spec:
 
           persistence:
             config:
-              # Created by the earlier gabe565 chart deploy and never
-              # onboarded, so Home Assistant starts its first-run setup.
-              existingClaim: home-assistant-config
+              # Created by the chart. local-path binds it to hp-elitedesk,
+              # where the pod is pinned.
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              storageClass: local-path
+              size: 20Gi
               advancedMounts:
                 home-assistant:
                   trust-proxies:

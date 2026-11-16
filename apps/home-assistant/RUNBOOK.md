@@ -10,8 +10,9 @@ same pattern as `apps/garmin-mcp`.
 - **LAN URL:** `http://home-assistant.mosher-labs.local` or
   `http://192.168.87.10:8123`
 - **Public URL:** `https://home.benniemosher.dev`
-- **Node:** pinned to `hp-elitedesk`, where the `home-assistant-config`
-  local-path volume lives.
+- **Node:** pinned to `hp-elitedesk`. The chart creates the 20Gi
+  `local-path` config volume there on first sync, and local-path keeps it on
+  that node.
 - **Networking:** `hostNetwork: true`. Home Assistant uses the node's
   homelab-VLAN address. The homelab VLAN can reach the IoT VLAN, but the IoT
   VLAN cannot reach back, so only integrations where Home Assistant opens the
