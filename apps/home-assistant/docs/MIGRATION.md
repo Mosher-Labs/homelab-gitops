@@ -1,5 +1,11 @@
 # Migrating from Standalone Homebridge to Home Assistant
 
+> **Superseded in part (2026-11-14).** Home Assistant now runs as a container
+> on k3s (see `../RUNBOOK.md`), and container installs have no add-ons, so the
+> Homebridge add-on steps below do not apply. Use Home Assistant's HomeKit
+> Bridge integration instead. The device IPs below are on the IoT VLAN; add
+> them by IP, since discovery does not cross VLANs.
+
 This guide walks through deploying Home Assistant to the Kubernetes cluster
 and migrating Homebridge to run as a Home Assistant add-on.
 

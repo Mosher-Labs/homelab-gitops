@@ -1,0 +1,177 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace and the sealed cloudflared tunnel token.
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/home-assistant/manifests
+
+    # bjw-s app-template, same pattern as apps/lifttrace and apps/garmin-mcp.
+    - repoURL: ghcr.io/bjw-s-labs/helm
+      chart: app-template
+      targetRevision: 5.3.0
+      helm:
+        releaseName: home-assistant
+        valuesObject:
+          controllers:
+            home-assistant:
+              type: deployment
+              # One SQLite database on a ReadWriteOnce volume.
+              strategy: Recreate
+              pod:
+                # Host networking so Home Assistant can reach devices on the
+                # IoT VLAN from the node's address and advertise HomeKit
+                # Bridge over mDNS on the homelab VLAN. The IoT VLAN cannot
+                # reach the homelab VLAN, so every integration must be one
+                # where Home Assistant opens the connection.
+                hostNetwork: true
+                dnsPolicy: ClusterFirstWithHostNet
+                # The config volume (local-path) already lives here.
+                nodeSelector:
+                  kubernetes.io/hostname: hp-elitedesk
+              initContainers:
+                # Home Assistant rejects proxied requests unless the proxy
+                # is trusted. cloudflared connects over 127.0.0.1 and
+                # Traefik from the pod network. Appends the block once and
+                # leaves the rest of configuration.yaml to the UI.
+                trust-proxies:
+                  image:
+                    repository: busybox
+                    tag: 1.37@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      f=/config/configuration.yaml
+                      touch "$f"
+                      grep -q '^http:' "$f" || cat >> "$f" <<'YAML'
+
+                      http:
+                        use_x_forwarded_for: true
+                        trusted_proxies:
+                          - 127.0.0.1
+                          - ::1
+                          - 10.42.0.0/16
+                      YAML
+              containers:
+                app:
+                  image:
+                    repository: ghcr.io/home-assistant/home-assistant
+                    tag: 2026.11.1@sha256:6785d1eca68747a524c156faae1b139ed415c07357386ae6fe17291986e59e82
+                  env:
+                    TZ: America/Denver
+                  probes:
+                    # Home Assistant has no unauthenticated health endpoint;
+                    # the frontend manifest is static and answers once the
+                    # HTTP server is up.
+                    liveness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /manifest.json
+                          port: 8123
+                        initialDelaySeconds: 60
+                        periodSeconds: 30
+                        failureThreshold: 5
+                    readiness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /manifest.json
+                          port: 8123
+                        initialDelaySeconds: 20
+                        periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 200m
+                      memory: 512Mi
+                    limits:
+                      cpu: "1"
+                      memory: 2Gi
+
+                # cloudflared sidecar, same pattern as apps/lifttrace. With
+                # host networking it reaches Home Assistant on
+                # localhost:8123 and only dials out to Cloudflare.
+                cloudflared:
+                  image:
+                    repository: cloudflare/cloudflared
+                    tag: 2026.10.7@sha256:4955524aeaa379e154023d5a027c250f7b35041a2e7e950cf13f144bc9b9c5ba
+                  args:
+                    - tunnel
+                    - --no-autoupdate
+                    - run
+                    - --token
+                    - $(CF_TOKEN)
+                  env:
+                    CF_TOKEN:
+                      valueFrom:
+                        secretKeyRef:
+                          name: cloudflared-credentials
+                          key: tunnel-token
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 32Mi
+                    limits:
+                      cpu: 100m
+                      memory: 64Mi
+
+          # LAN access at http://home-assistant.mosher-labs.local, same
+          # hostname as before. With host networking the pod's address is
+          # hp-elitedesk's, so this also works at http://192.168.87.10:8123.
+          service:
+            app:
+              controller: home-assistant
+              ports:
+                http:
+                  port: 8123
+          ingress:
+            app:
+              className: traefik
+              hosts:
+                - host: home-assistant.mosher-labs.local
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      service:
+                        identifier: app
+                        port: http
+
+          persistence:
+            config:
+              # Created by the earlier gabe565 chart deploy and never
+              # onboarded, so Home Assistant starts its first-run setup.
+              existingClaim: home-assistant-config
+              advancedMounts:
+                home-assistant:
+                  trust-proxies:
+                    - path: /config
+                  app:
+                    - path: /config
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
