@@ -42,7 +42,7 @@ spec:
                     # Built from Mosher-Labs/spotify-mcp main by its Image
                     # workflow (RUNBOOK.md, "Updating the image").
                     repository: ghcr.io/mosher-labs/spotify-mcp
-                    tag: 86881bb@sha256:53377f721e10db9013f07ef48484ed5c46053dee30ff52f792c7729b4a545ad8
+                    tag: afc8b90@sha256:791efa5a65c7e1d7740f5774bc5ef976b973e57f52cc0040062341d6b3a97882
                   env:
                     TZ: America/Denver
                     # Public identifier of the Spotify developer app; PKCE means
@@ -55,6 +55,10 @@ spec:
                     # claude.ai drops idle sessions (same reasoning as
                     # garmin-mcp).
                     SPOTIFY_MCP_STATELESS_HTTP: "true"
+                    # BPM from iTunes previews when ReccoBeats has none
+                    # (apps/tempo-service). Its NetworkPolicy admits this
+                    # namespace.
+                    TEMPO_SERVICE_URL: http://tempo-service.tempo-service:8000
                   envFrom:
                     - secretRef:
                         # SPOTIFY_MCP_HTTP_TOKEN: every /mcp call must send it.
