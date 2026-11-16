@@ -35,9 +35,28 @@ locals {
       # hostname stays behind Access.
       access_bypass_paths = ["/mcp"]
     }
+    home-assistant = {
+      zone      = "benniemosher.dev"
+      subdomain = "home"
+      # cloudflared shares the node's network with Home Assistant
+      # (hostNetwork), so it reaches it over loopback.
+      service = "http://localhost:8123"
+      # No Access gate on the whole hostname. The Home Assistant iPhone
+      # app reports location and runs automations through this URL and
+      # cannot complete an Access login, so Home Assistant's own login
+      # with MFA is the gate.
+      access_enabled = false
+    }
   }
 
   zone_names = toset([for app in local.tunnel_apps : app.zone])
+
+  # Apps that get the personal-allow Access application. Defaults to on;
+  # set access_enabled = false only for an app with its own login.
+  access_apps = {
+    for key, app in local.tunnel_apps : key => app
+    if try(app.access_enabled, true)
+  }
 
   # Flatten (app, path) pairs across every tunnel_app's
   # access_bypass_paths into one map keyed by "<app>|<path>", for a

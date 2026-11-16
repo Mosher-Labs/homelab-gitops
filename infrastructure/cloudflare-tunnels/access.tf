@@ -15,7 +15,7 @@ resource "cloudflare_zero_trust_access_policy" "personal" {
 }
 
 resource "cloudflare_zero_trust_access_application" "tunnel_apps" {
-  for_each = local.tunnel_apps
+  for_each = local.access_apps
 
   account_id       = var.cloudflare_account_id
   name             = each.key

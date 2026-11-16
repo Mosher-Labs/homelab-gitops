@@ -31,7 +31,6 @@ Examples of the pattern:
 - PiHole: `mojo2600.github.io/pihole-kubernetes`
 - MetalLB: `metallb.github.io/metallb`
 - Sealed Secrets: `bitnami-labs.github.io/sealed-secrets`
-- Home Assistant: `charts.gabe565.com` (gabe565/home-assistant)
 
 **Pattern Structure:**
 
@@ -120,11 +119,11 @@ Each app directory contains:
   chart available), HostNetwork: true (required for mDNS/Bonjour), Configured
   plugins: homebridge-ring, homebridge-tplink-smarthome, HomeKit PIN: 764-66-872
 
-- **Home Assistant** (v0.25.1): Home automation platform - Web UI:
-  `http://home-assistant.mosher-labs.local`, Helm Chart: gabe565/home-assistant,
-  HostNetwork: true (required for local device discovery), Storage: 20Gi PVC,
-  Integrations: TP-Link Kasa, Ring, Rachio (configured via UI), Can run Homebridge
-  as add-on
+- **Home Assistant** (2026.11.1): Home automation platform - LAN:
+  `http://home-assistant.mosher-labs.local`, Public: `https://home.benniemosher.dev`
+  (no Access gate, HA login + MFA), bjw-s app-template + cloudflared sidecar,
+  HostNetwork: true pinned to hp-elitedesk, 20Gi PVC. IoT devices are on a
+  separate VLAN: add them by IP. See `apps/home-assistant/RUNBOOK.md`
 
 - **TP-Link Sync** (custom): Syncs TP-Link device names to Git - CronJob: Periodic
   sync, Python script with UniFi and GitHub integration
