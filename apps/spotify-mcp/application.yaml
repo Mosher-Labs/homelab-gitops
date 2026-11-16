@@ -1,0 +1,144 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spotify-mcp
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace, sealed MCP token, sealed cloudflared tunnel token, and the
+    # default-deny NetworkPolicy.
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/spotify-mcp/manifests
+
+    # bjw-s app-template: same pattern as apps/garmin-mcp.
+    - repoURL: ghcr.io/bjw-s-labs/helm
+      chart: app-template
+      targetRevision: 5.3.0
+      helm:
+        releaseName: spotify-mcp
+        valuesObject:
+          defaultPodOptions:
+            # The image runs as uid 10001; fsGroup makes the data volume
+            # writable.
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 10001
+              runAsGroup: 10001
+              fsGroup: 10001
+          controllers:
+            spotify-mcp:
+              type: deployment
+              # One token file and one SQLite cache on a ReadWriteOnce volume,
+              # so never two pods at once.
+              strategy: Recreate
+              containers:
+                app:
+                  image:
+                    # Built from benniemosher/spotify_mcp (image.yml workflow).
+                    # TODO before merge: replace with the tag and digest of the
+                    # first build, e.g. 1a2b3c4@sha256:... (RUNBOOK.md, step 1).
+                    repository: ghcr.io/benniemosher/spotify-mcp
+                    tag: REPLACE_WITH_TAG@sha256:REPLACE_WITH_DIGEST
+                  env:
+                    TZ: America/Denver
+                    # Public identifier of the Spotify developer app; PKCE means
+                    # there is no client secret.
+                    SPOTIFY_CLIENT_ID: REPLACE_WITH_SPOTIFY_CLIENT_ID
+                    SPOTIFY_REDIRECT_URI: http://127.0.0.1:8888/callback
+                    SPOTIFY_MCP_DATA_DIR: /data
+                    SPOTIFY_MCP_HOST: 0.0.0.0
+                    SPOTIFY_MCP_PORT: "8000"
+                    # claude.ai drops idle sessions (same reasoning as
+                    # garmin-mcp).
+                    SPOTIFY_MCP_STATELESS_HTTP: "true"
+                  envFrom:
+                    - secretRef:
+                        # SPOTIFY_MCP_HTTP_TOKEN: every /mcp call must send it.
+                        name: spotify-mcp-secrets
+                  probes:
+                    liveness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /healthz
+                          port: 8000
+                        initialDelaySeconds: 10
+                        periodSeconds: 30
+                    # 503 until spotify-mcp-auth has written the token file.
+                    readiness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /readyz
+                          port: 8000
+                        initialDelaySeconds: 5
+                        periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 96Mi
+                    limits:
+                      cpu: 500m
+                      memory: 384Mi
+
+                # cloudflared sidecar, same pattern as apps/garmin-mcp.
+                cloudflared:
+                  image:
+                    repository: cloudflare/cloudflared
+                    tag: 2026.10.7@sha256:4955524aeaa379e154023d5a027c250f7b35041a2e7e950cf13f144bc9b9c5ba
+                  args:
+                    - tunnel
+                    - --no-autoupdate
+                    - run
+                    - --token
+                    - $(CF_TOKEN)
+                  env:
+                    CF_TOKEN:
+                      valueFrom:
+                        secretKeyRef:
+                          name: cloudflared-credentials
+                          key: tunnel-token
+                  resources:
+                    requests:
+                      cpu: 25m
+                      memory: 32Mi
+                    limits:
+                      cpu: 100m
+                      memory: 64Mi
+
+          # No Service or Ingress: cloudflared reaches the app over
+          # localhost:8000 inside the pod. See manifests/networkpolicy.yaml.
+
+          persistence:
+            data:
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              advancedMounts:
+                spotify-mcp:
+                  app:
+                    - path: /data
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spotify-mcp
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
