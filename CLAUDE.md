@@ -174,6 +174,15 @@ Each app directory contains:
   its own token (`SPOTIFY_MCP_HTTP_TOKEN`, sealed, sent as `X-API-Key`). The
   Spotify refresh token lives on the PVC from a one-time `spotify-mcp-auth`
   (PKCE, no client secret). See `apps/spotify-mcp/RUNBOOK.md`.
+- **tempo-service** (`bjw-s-labs/app-template` chart v5.3.0 /
+  `ghcr.io/mosher-labs/tempo-service`): artist + title to BPM, from the
+  iTunes 30 second preview run through Essentia, cached in SQLite on the PVC.
+  Our own service (`Mosher-Labs/tempo-service`), meant as spotify-mcp's
+  fallback when ReccoBeats has no tempo. No auth, so no tunnel or Ingress:
+  a ClusterIP Service on 8000, and a NetworkPolicy that admits only the
+  `spotify-mcp` namespace. Test with `kubectl port-forward`. One replica,
+  because the iTunes rate limiter is in-process. See
+  `apps/tempo-service/RUNBOOK.md`.
 
 ## Smart Home Device Context
 
