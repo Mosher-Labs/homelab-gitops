@@ -1,0 +1,111 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tempo-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Namespace and the NetworkPolicy that admits only spotify-mcp.
+    - repoURL: https://github.com/Mosher-Labs/homelab-gitops.git
+      targetRevision: main
+      path: apps/tempo-service/manifests
+
+    # bjw-s app-template: same pattern as apps/spotify-mcp.
+    - repoURL: ghcr.io/bjw-s-labs/helm
+      chart: app-template
+      targetRevision: 5.3.0
+      helm:
+        releaseName: tempo-service
+        valuesObject:
+          defaultPodOptions:
+            # The image runs as uid 10001; fsGroup makes the data volume
+            # writable.
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 10001
+              runAsGroup: 10001
+              fsGroup: 10001
+          controllers:
+            tempo-service:
+              type: deployment
+              # The iTunes rate limiter lives in the process, and the SQLite
+              # cache is on a ReadWriteOnce volume: one pod, never two.
+              strategy: Recreate
+              containers:
+                app:
+                  image:
+                    # Built from Mosher-Labs/tempo-service main by its Image
+                    # workflow (RUNBOOK.md, "Updating the image").
+                    repository: ghcr.io/mosher-labs/tempo-service
+                    tag: 561a820@sha256:62c588ccedbd5b03467b18adf10aebf608aa8eb0bf599c4fc9eda52cd3f1f201
+                  env:
+                    TZ: America/Denver
+                    TEMPO_DB: /data/tempo.db
+                  probes:
+                    liveness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /healthz
+                          port: 8000
+                        initialDelaySeconds: 10
+                        periodSeconds: 30
+                    readiness:
+                      enabled: true
+                      custom: true
+                      spec:
+                        httpGet:
+                          path: /healthz
+                          port: 8000
+                        initialDelaySeconds: 5
+                        periodSeconds: 10
+                  # Essentia holds a 30 s preview plus its analysis buffers;
+                  # the limit is a first guess until real usage is measured.
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 256Mi
+                    limits:
+                      cpu: "1"
+                      memory: 1Gi
+
+          # In-cluster only, no tunnel or Ingress: the service has no auth.
+          # Test with kubectl port-forward (RUNBOOK.md).
+          service:
+            app:
+              controller: tempo-service
+              ports:
+                http:
+                  port: 8000
+
+          persistence:
+            data:
+              type: persistentVolumeClaim
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              advancedMounts:
+                tempo-service:
+                  app:
+                    - path: /data
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tempo-service
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

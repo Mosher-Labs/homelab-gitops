@@ -1,0 +1,23 @@
+---
+# tempo-service has no auth, so only spotify-mcp, its planned caller, may
+# reach it. kubectl port-forward is not affected by this policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tempo-service-allow-spotify-mcp
+  namespace: tempo-service
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: tempo-service
+      app.kubernetes.io/instance: tempo-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: spotify-mcp
+      ports:
+        - protocol: TCP
+          port: 8000
