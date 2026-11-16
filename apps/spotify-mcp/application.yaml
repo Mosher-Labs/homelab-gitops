@@ -39,16 +39,15 @@ spec:
               containers:
                 app:
                   image:
-                    # Built from benniemosher/spotify_mcp (image.yml workflow).
-                    # TODO before merge: replace with the tag and digest of the
-                    # first build, e.g. 1a2b3c4@sha256:... (RUNBOOK.md, step 1).
-                    repository: ghcr.io/benniemosher/spotify-mcp
-                    tag: REPLACE_WITH_TAG@sha256:REPLACE_WITH_DIGEST
+                    # Built from Mosher-Labs/spotify-mcp main by its Image
+                    # workflow (RUNBOOK.md, "Updating the image").
+                    repository: ghcr.io/mosher-labs/spotify-mcp
+                    tag: 86881bb@sha256:53377f721e10db9013f07ef48484ed5c46053dee30ff52f792c7729b4a545ad8
                   env:
                     TZ: America/Denver
                     # Public identifier of the Spotify developer app; PKCE means
                     # there is no client secret.
-                    SPOTIFY_CLIENT_ID: REPLACE_WITH_SPOTIFY_CLIENT_ID
+                    SPOTIFY_CLIENT_ID: e71308bc6a5345a6a436db28c7851ac5
                     SPOTIFY_REDIRECT_URI: http://127.0.0.1:8888/callback
                     SPOTIFY_MCP_DATA_DIR: /data
                     SPOTIFY_MCP_HOST: 0.0.0.0

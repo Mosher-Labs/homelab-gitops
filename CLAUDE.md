@@ -165,9 +165,9 @@ Each app directory contains:
   live on the PVC from a one-time `garmin-mcp-auth`; no Garmin password in
   the cluster. `delete_activity` is disabled. See `apps/garmin-mcp/RUNBOOK.md`.
 - **Spotify MCP** (`bjw-s-labs/app-template` chart v5.3.0 /
-  `ghcr.io/benniemosher/spotify-mcp`): MCP server that lets Claude build
+  `ghcr.io/mosher-labs/spotify-mcp`): MCP server that lets Claude build
   workout playlists from Bennie's top and liked tracks, filtered by energy and
-  tempo. Our own small server (`benniemosher/spotify_mcp`). Tempo and energy
+  tempo. Our own small server (`Mosher-Labs/spotify-mcp`). Tempo and energy
   come from ReccoBeats because Spotify closed audio features to new apps;
   they are cached in SQLite on the PVC. Same lockdown pattern as Garmin MCP,
   at `spotify.benniemosher.dev` with an Access bypass for `/mcp`, which checks
