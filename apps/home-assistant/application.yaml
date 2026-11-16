@@ -51,7 +51,28 @@ spec:
                     - -c
                     - |
                       f=/config/configuration.yaml
-                      touch "$f"
+                      # Home Assistant only writes its default config when
+                      # the file is missing, so on a fresh volume write that
+                      # default here. Without default_config the mobile app
+                      # integration does not load.
+                      if [ ! -e "$f" ]; then
+                        cat > "$f" <<'YAML'
+                      # Loads default set of integrations. Do not remove.
+                      default_config:
+
+                      # Load frontend themes from the themes folder
+                      frontend:
+                        themes: !include_dir_merge_named themes
+
+                      automation: !include automations.yaml
+                      script: !include scripts.yaml
+                      scene: !include scenes.yaml
+                      YAML
+                        a=/config/automations.yaml
+                        [ -e "$a" ] || echo '[]' > "$a"
+                        touch /config/scripts.yaml /config/scenes.yaml
+                        mkdir -p /config/themes
+                      fi
                       grep -q '^http:' "$f" || cat >> "$f" <<'YAML'
 
                       http:
