@@ -10,8 +10,8 @@ same pattern as `apps/garmin-mcp`.
 
 - **Namespace:** `spotify-mcp`
 - **Public URL:** `https://spotify.benniemosher.dev/mcp`
-- **Image:** `ghcr.io/benniemosher/spotify-mcp`, built from
-  `benniemosher/spotify_mcp` `main` by its `Image` workflow and pinned by
+- **Image:** `ghcr.io/mosher-labs/spotify-mcp`, built from
+  `Mosher-Labs/spotify-mcp` `main` by its `Image` workflow and pinned by
   digest in `application.yaml`.
 - **Auth to the server:** every `/mcp` call must send `SPOTIFY_MCP_HTTP_TOKEN`
   as `X-API-Key` (claude.ai reserves `Authorization`). Cloudflare Access gates
@@ -51,12 +51,12 @@ Checked against developer.spotify.com on 2026-11-14.
 
 ### 1. Build the image
 
-In `benniemosher/spotify_mcp`, merge to `main`. The `Image` workflow pushes
-`ghcr.io/benniemosher/spotify-mcp:<short sha>`. Read the digest and put
+In `Mosher-Labs/spotify-mcp`, merge to `main`. The `Image` workflow pushes
+`ghcr.io/mosher-labs/spotify-mcp:<short sha>`. Read the digest and put
 `<short sha>@sha256:<digest>` in `application.yaml`:
 
 ```bash
-crane digest ghcr.io/benniemosher/spotify-mcp:<short sha>
+crane digest ghcr.io/mosher-labs/spotify-mcp:<short sha>
 ```
 
 ### 2. Create the Spotify app
