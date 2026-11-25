@@ -42,7 +42,7 @@ spec:
                     # Built from Mosher-Labs/spotify-mcp main by its Image
                     # workflow (RUNBOOK.md, "Updating the image").
                     repository: ghcr.io/mosher-labs/spotify-mcp
-                    tag: 6139eab@sha256:db420d6236198a8c1f5e2c04ab91ceceaa0ae1a2172681b6dd9290284e7ad971
+                    tag: 56dda11@sha256:0a49b12d8859b7a361510ec6c2ad5fb08c867133e596b754c73a91e6e803b195
                   env:
                     TZ: America/Denver
                     # Public identifier of the Spotify developer app; PKCE means
