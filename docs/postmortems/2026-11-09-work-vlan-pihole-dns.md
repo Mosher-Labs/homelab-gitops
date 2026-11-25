@@ -78,7 +78,7 @@ stayed quiet the whole time, as the runbook predicts, because `example.com` kept
 | Confirm which VLAN changed on 2026-10-25 and why Pi-hole was set as its DNS | process | P1 | Bennie Mosher | #256 | 2026-11-12 |
 | Add the client-ranking query and the work VLAN cause to the runbook | process | P1 | Bennie Mosher | [#257](https://github.com/Mosher-Labs/homelab-gitops/pull/257) | 2026-11-09 |
 | Decide whether the SLI should count failed lookups from every client, and record the decision in the SLO document | prevent | P2 | Bennie Mosher | To open | 2026-12-08 |
-| Answer `an internal probe name` locally with NXDOMAIN, so the VPN probe from one work Mac (about 10 bad replies a day) stops spending budget | mitigate | P2 | Bennie Mosher | [#259](https://github.com/Mosher-Labs/homelab-gitops/pull/259) | 2026-11-12 |
+| Exclude the expected VPN probe lookup from one work Mac from the replies SLI (about 10 bad replies a day). Answering it locally broke the VPN login and was reverted in [#261](https://github.com/Mosher-Labs/homelab-gitops/pull/261) | mitigate | P2 | Bennie Mosher | [#288](https://github.com/Mosher-Labs/homelab-gitops/issues/288) | 2026-12-08 |
 
 ## Lessons learned
 
