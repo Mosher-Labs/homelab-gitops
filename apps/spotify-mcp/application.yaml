@@ -72,7 +72,7 @@ spec:
                     # Append a one-line music summary (🎧 ...) to each
                     # webhook-logged Strava activity's description. Needs
                     # activity:write from spotify-mcp-strava-auth.
-                    STRAVA_WRITE_DESCRIPTIONS: "false"
+                    STRAVA_WRITE_DESCRIPTIONS: "true"
                   envFrom:
                     - secretRef:
                         # SPOTIFY_MCP_HTTP_TOKEN: every /mcp call must send it.
