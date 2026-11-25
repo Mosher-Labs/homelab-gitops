@@ -59,10 +59,20 @@ spec:
                     # (apps/tempo-service). Its NetworkPolicy admits this
                     # namespace.
                     TEMPO_SERVICE_URL: http://tempo-service.tempo-service:8000
+                    # A Strava webhook triggers the listening log, so the
+                    # background poll is off. Set 3600 for an hourly safety
+                    # net against Spotify's 50-play limit (RUNBOOK.md).
+                    SPOTIFY_MCP_POLL_SECONDS: "0"
                   envFrom:
                     - secretRef:
                         # SPOTIFY_MCP_HTTP_TOKEN: every /mcp call must send it.
                         name: spotify-mcp-secrets
+                    - secretRef:
+                        # STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET,
+                        # STRAVA_WEBHOOK_VERIFY_TOKEN. Optional: without it
+                        # the webhook is off and the pod still starts.
+                        name: spotify-mcp-strava
+                        optional: true
                   probes:
                     liveness:
                       enabled: true
