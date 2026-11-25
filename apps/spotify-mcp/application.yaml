@@ -30,6 +30,11 @@ spec:
               runAsUser: 10001
               runAsGroup: 10001
               fsGroup: 10001
+              # With the default (Always), kubelet adds group read/write to
+              # every file on the volume at each pod start, which turns
+              # token.json from 0600 into 0660. OnRootMismatch skips that
+              # pass once /data already has the right group.
+              fsGroupChangePolicy: OnRootMismatch
           controllers:
             spotify-mcp:
               type: deployment
