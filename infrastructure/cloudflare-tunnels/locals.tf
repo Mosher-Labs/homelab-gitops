@@ -54,9 +54,11 @@ locals {
       service = "http://localhost:8000"
       # Same reason as garmin-mcp: claude.ai's connector cannot pass an Access
       # login, and every /mcp call must carry the server's own
-      # SPOTIFY_MCP_HTTP_TOKEN in X-API-Key. Everything else on the hostname
-      # stays behind Access.
-      access_bypass_paths = ["/mcp"]
+      # SPOTIFY_MCP_HTTP_TOKEN in X-API-Key. /strava/webhook is Strava's push
+      # subscription callback: Strava cannot log in or send headers, so the
+      # app checks the verify token and the event's subscription and owner
+      # IDs itself. Everything else on the hostname stays behind Access.
+      access_bypass_paths = ["/mcp", "/strava/webhook"]
     }
   }
 
