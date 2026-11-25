@@ -59,10 +59,15 @@ spec:
                     # (apps/tempo-service). Its NetworkPolicy admits this
                     # namespace.
                     TEMPO_SERVICE_URL: http://tempo-service.tempo-service:8000
-                    # A Strava webhook triggers the listening log, so the
-                    # background poll is off. Set 3600 for an hourly safety
-                    # net against Spotify's 50-play limit (RUNBOOK.md).
-                    SPOTIFY_MCP_POLL_SECONDS: "0"
+                    # A Strava webhook triggers the listening log. Until the
+                    # Strava trigger is set up (RUNBOOK.md), poll hourly so
+                    # nothing falls off Spotify's 50-play limit. Set "0" once
+                    # webhook events arrive.
+                    SPOTIFY_MCP_POLL_SECONDS: "3600"
+                    # Append a one-line music summary (🎧 ...) to each
+                    # webhook-logged Strava activity's description. Needs
+                    # activity:write from spotify-mcp-strava-auth.
+                    STRAVA_WRITE_DESCRIPTIONS: "false"
                   envFrom:
                     - secretRef:
                         # SPOTIFY_MCP_HTTP_TOKEN: every /mcp call must send it.

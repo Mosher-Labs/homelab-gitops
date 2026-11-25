@@ -227,11 +227,15 @@ Docs: <https://developers.strava.com/docs/webhooks/> and
    `cd infrastructure/cloudflare-tunnels && terraform plan && terraform apply`.
    The plan should add one `cloudflare_zero_trust_access_application`
    (`spotify-mcp-bypass--strava-webhook`) and change nothing else.
-4. **Ship the image** with the webhook (`Mosher-Labs/spotify-mcp` PR #6) and
+4. **Ship the image** with the webhook and description writing
+   (`Mosher-Labs/spotify-mcp` PRs #6 and #7) and
    pin its digest in `application.yaml` (step 1 of "Initial deployment"). Merge, and
    let ArgoCD sync.
-5. **Log in to Strava once.** It asks for `activity:read_all` (read-only;
-   includes "Only You" activities). Leave every box ticked.
+5. **Log in to Strava once.** It asks for `activity:read_all` (includes "Only
+   You" activities) and `activity:write` (needed to write activity
+   descriptions). Leave every box ticked; the login fails if either is
+   unticked. A token saved before the image asked for `activity:write` can
+   read but not write, so run this step again to replace it.
 
    ```bash
    kubectl exec -it -n spotify-mcp deploy/spotify-mcp -c app -- spotify-mcp-strava-auth
