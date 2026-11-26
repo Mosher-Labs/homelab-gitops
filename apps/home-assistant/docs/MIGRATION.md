@@ -89,10 +89,10 @@ Homebridge plugins:
 **Devices that will be configured:**
 
 - Front Door (doorbell)
-- Garden camera
+- Side Yard South camera (was Garden)
 - Backyard camera
 - Garage camera
-- Side camera
+- Side Yard North camera (was Side)
 - All associated sensors (motion, battery, etc.)
 
 **Note:** You'll need to re-authenticate Ring credentials. The refresh

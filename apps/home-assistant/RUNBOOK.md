@@ -14,8 +14,8 @@ same pattern as `apps/garmin-mcp`.
   `local-path` config volume there on first sync, and local-path keeps it on
   that node.
 - **Networking:** `hostNetwork: true`. Home Assistant uses the node's
-  homelab-VLAN address. The homelab VLAN can reach the IoT VLAN. The IoT
-  VLAN can reach only Home Assistant on port 8123 (so Google Cast devices can
+  homelab-VLAN address. The IoT VLAN has its own UniFi firewall zone. The
+  homelab VLAN can reach it. The IoT VLAN can reach only Home Assistant on port 8123 (so Google Cast devices can
   fetch announcement audio), so otherwise only integrations where Home
   Assistant opens the connection work. UniFi reflects mDNS between the VLANs,
   so Cast and HomeKit devices are discovered. Broadcast discovery (Kasa) does
@@ -99,9 +99,13 @@ integration's setup dialog; Cast and HomeKit devices show up through mDNS.
 | .63 | Kitchen Speaker |
 | .64 | Master Bedroom Speaker |
 | .80-.82 | Living Room, Maisie's Room, Master Bedroom TVs (Ethernet) |
-| .90-.92 | Same TVs (Wi-Fi) |
+| .83 | Basement TV (LG, Ethernet) |
+| .90-.92 | Same TVs as .80-.82 (Wi-Fi) |
+| .93 | Basement TV (LG, Wi-Fi) |
 | .100 | Ring Doorbell |
-| .101-.104 | Backyard, Garage, Garden, Side Yard cameras (Ring) |
+| .101-.102 | Backyard and Garage cameras (Ring) |
+| .103 | Side Yard South camera (Ring) |
+| .104 | Side Yard North camera (Ring) |
 | .110 | Garage Door (MyQ) |
 | .120 | Thermostat (Ecobee) |
 | .121 | Sprinklers (Rachio) |

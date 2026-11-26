@@ -218,10 +218,10 @@ DHCP reservation in UniFi; the full IoT IP map is in `apps/home-assistant/RUNBOO
 **Cameras:**
 
 - Front Door (doorbell - cocoa_doorbell_v2)
-- Garden (hp_cam_v2)
+- Side Yard South (hp_cam_v2), named Garden before 2026-11-26
 - Backyard (hp_cam_v2)
 - Garage (hp_cam_v1)
-- Side (hp_cam_v2)
+- Side Yard North (hp_cam_v2), named Side before 2026-11-26
 
 **Integration:**
 
@@ -377,6 +377,10 @@ Example: Sealed secrets deploy before apps that consume them
 
 - **Homelab VLAN:** 192.168.87.0/24 (k3s nodes, MetalLB)
 - **IoT VLAN:** 192.168.3.0/24 (smart devices, fixed IPs .10-.141, DHCP pool .200-.254)
+- **Firewall zones (UniFi, since 2026-11-26):** IoT and Abbie each have their own zone.
+  Internal (every other home network except Work) can reach both. Abbie can reach IoT, for
+  casting. IoT can reach only Home Assistant (192.168.87.10:8123) on Internal. Both zones
+  get the internet and only DNS, DHCP, NTP and mDNS on the gateway.
 - **Main LAN (Yggdrasil):** 192.168.200.0/22
 - **DNS:** PiHole at 192.168.87.101
 - **Ingress Domain:** *.mosher-labs.local (Traefik)
