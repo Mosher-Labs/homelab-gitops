@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-copy
+  namespace: home-assistant
+data:
+  backup_copy.py: |
+    """Copy Home Assistant's encrypted backups off hp-elitedesk.
+
+    Lists the backups Home Assistant holds, downloads any this folder does
+    not have yet, and keeps the newest KEEP files. Refuses to copy a backup
+    that is not encrypted, and fails when the newest backup is older than
+    MAX_AGE_HOURS, so a stopped backup schedule shows up as a failed job.
+    """
+    import asyncio
+    import datetime
+    import json
+    import os
+    import pathlib
+    import sys
+    import urllib.request
+
+    import websockets
+
+    HA = os.environ['HA_URL']
+    TOKEN = os.environ['HA_TOKEN']
+    DEST = pathlib.Path(os.environ['DEST'])
+    KEEP = int(os.environ['KEEP'])
+    MAX_AGE = datetime.timedelta(hours=int(os.environ['MAX_AGE_HOURS']))
+    AGENT = 'backup.local'
+
+
+    async def backups():
+        url = HA.replace('http', 'ws', 1) + '/api/websocket'
+        async with websockets.connect(url, max_size=None) as ws:
+            await ws.recv()
+            await ws.send(json.dumps({'type': 'auth', 'access_token': TOKEN}))
+            if json.loads(await ws.recv())['type'] != 'auth_ok':
+                sys.exit('Home Assistant rejected the token')
+            await ws.send(json.dumps({'id': 1, 'type': 'backup/info'}))
+            while True:
+                r = json.loads(await ws.recv())
+                if r.get('id') == 1:
+                    break
+            if not r['success']:
+                sys.exit(f'backup/info failed: {r.get("error")}')
+            return r['result']['backups']
+
+
+    def main():
+        found = [b for b in asyncio.run(backups())
+                 if AGENT in b.get('agents', {})]
+        if not found:
+            sys.exit('Home Assistant has no local backups')
+        for b in found:
+            name = f"{b['date'][:10]}_{b['backup_id']}.tar"
+            target = DEST / name
+            if target.exists():
+                continue
+            if not b['agents'][AGENT].get('protected'):
+                sys.exit(f'{b["name"]} is not encrypted; '
+                         'turn on encryption in Home Assistant')
+            req = urllib.request.Request(
+                f"{HA}/api/backup/download/{b['backup_id']}?agent_id={AGENT}",
+                headers={'Authorization': f'Bearer {TOKEN}'})
+            part = target.with_suffix('.part')
+            with (urllib.request.urlopen(req, timeout=600) as r,
+                  open(part, 'wb') as f):
+                while chunk := r.read(1 << 20):
+                    f.write(chunk)
+            part.rename(target)
+            print(f'copied {name} ({target.stat().st_size} bytes)')
+        files = sorted(DEST.glob('*.tar'))
+        for old in files[:-KEEP]:
+            old.unlink()
+            print(f'removed {old.name}')
+        newest = max(datetime.datetime.fromisoformat(b['date'])
+                     for b in found)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        age = now - newest
+        if age > MAX_AGE:
+            sys.exit(f'newest backup is {age} old; '
+                     'check the schedule in Home Assistant')
+        kept = len(files[-KEEP:])
+        print(f'{kept} backups on battlestation, newest {age} old')
+
+
+    main()
