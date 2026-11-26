@@ -45,7 +45,7 @@ spec:
                 trust-proxies:
                   image:
                     repository: busybox
-                    tag: 1.37@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
+                    tag: 1.38@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
                   command:
                     - sh
                     - -c
@@ -88,7 +88,7 @@ spec:
                 custom-components:
                   image:
                     repository: docker.io/alpine/git
-                    tag: v2.49.1@sha256:c0280cf9572316299b08544065d3bf35db65043d5e3963982ec50647d2746e26
+                    tag: v2.54.1@sha256:29cff25811f790b9f72fc266bf8009a5a911714c0e03c31c47339c50909d9aef
                   env:
                     # yamllint disable-line rule:line-length
                     # renovate: datasource=github-tags depName=romedtino/simple-wyze-vac
@@ -127,7 +127,7 @@ spec:
                 app:
                   image:
                     repository: ghcr.io/home-assistant/home-assistant
-                    tag: 2026.11.1@sha256:6785d1eca68747a524c156faae1b139ed415c07357386ae6fe17291986e59e82
+                    tag: 2026.11.3@sha256:24e541ddae5818bf8eb27898b9ba00d0c344a655aa5097e9e9bd4b19356be847
                   env:
                     TZ: America/Denver
                   probes:
@@ -167,7 +167,7 @@ spec:
                 cloudflared:
                   image:
                     repository: cloudflare/cloudflared
-                    tag: 2026.10.7@sha256:4955524aeaa379e154023d5a027c250f7b35041a2e7e950cf13f144bc9b9c5ba
+                    tag: 2026.11.2@sha256:55c7e3e8d89d5e8d20b75a82f3602cbf98e06db406e73e282073cfdc5a9a3af6
                   args:
                     - tunnel
                     - --no-autoupdate
