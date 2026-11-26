@@ -114,6 +114,84 @@ integration's setup dialog; Cast and HomeKit devices show up through mDNS.
 
 The DHCP pool is .200-.254, so a new device lands there until it gets a reservation.
 
+## Community integrations
+
+The `custom-components` init container installs community integrations into
+`/config/custom_components` before Home Assistant starts. Each one is pinned
+in `application.yaml` to a release tag and the commit that tag points to, and
+the container refuses to install it if the two disagree. HACS is not used.
+Renovate bumps the tag and the commit together.
+
+Installed now:
+
+- `simple_wyze_vac` ([romedtino/simple-wyze-vac](https://github.com/romedtino/simple-wyze-vac)),
+  for the Wyze vacuum. It needs a Wyze API key ID and key from
+  <https://developer-api-console.wyze.com>, entered when you add the
+  integration. Cloud only.
+
+To add another, add a `_VERSION` and `_COMMIT` env pair under a
+`# renovate:` comment and one more `install` line.
+
+## Rooms and names (layout.yaml)
+
+`layout/layout.yaml` holds the floors, the areas, and each device's name and
+room, matched by MAC address or integration ID. It also holds each entity's
+ID, matched by domain, platform and unique ID. It has no secrets. After
+changing rooms or names in the UI, export it and commit the result:
+
+```bash
+cd apps/home-assistant/layout
+uv run --with websockets==15.0.1 --with pyyaml==6.0.3 ha_layout.py export
+```
+
+To put a rebuilt Home Assistant back the way it was, pair the devices, then:
+
+```bash
+uv run --with websockets==15.0.1 --with pyyaml==6.0.3 ha_layout.py apply          # dry run
+uv run --with websockets==15.0.1 --with pyyaml==6.0.3 ha_layout.py apply --apply
+```
+
+Both read a long-lived token from `~/.config/ha/token`.
+
+## Backups
+
+Home Assistant makes its own encrypted backups on the schedule under
+Settings > System > Backups (daily, keep 7, local). The encryption key is in
+1Password; without it a backup cannot be restored.
+
+The `backup-copy` CronJob runs at 06:30 on battlestation. It downloads any new
+backup over Home Assistant's API into `/data/backups/home-assistant` and keeps
+the newest 14. It fails, and so shows as a failed job, when a backup is not
+encrypted or the newest one is more than 36 hours old. Its token is the
+long-lived token named "backup-copy (homelab-gitops CronJob)" in Home
+Assistant's admin profile, sealed in `backup-copy-sealed-secret.yaml`.
+
+The folder must exist before the first run, owned by uid 1000:
+
+```bash
+mkdir -p /data/backups/home-assistant   # on battlestation, as benniemosher
+```
+
+Check it:
+
+```bash
+kubectl -n home-assistant get jobs -l batch.kubernetes.io/cronjob-name=backup-copy
+ls -lh /data/backups/home-assistant
+```
+
+Run it now: `kubectl -n home-assistant create job --from=cronjob/backup-copy backup-copy-manual`.
+
+### Restoring after losing hp-elitedesk
+
+1. Let ArgoCD deploy Home Assistant on its new node. Change the
+   `nodeSelector` first if hp-elitedesk is gone.
+2. On the onboarding screen, choose to restore from a backup, upload the
+   newest file from `/data/backups/home-assistant`, and enter the encryption
+   key from 1Password.
+3. If no backup survived, set Home Assistant up fresh, add the integrations
+   again, pair the HomeKit and Android TV devices, and run
+   `ha_layout.py apply --apply` to put every device back in its room.
+
 ## Upgrading
 
 Renovate opens image updates. Read the release notes for breaking changes

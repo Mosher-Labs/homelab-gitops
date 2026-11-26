@@ -206,6 +206,14 @@ data:
         },
         {
           "customType": "regex",
+          "description": "Home Assistant community integrations, pinned as a _VERSION and _COMMIT env pair under a renovate comment",
+          "managerFilePatterns": ["/(^|/)apps/home-assistant/application\\.ya?ml$/"],
+          "matchStrings": [
+            "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s+- name: \\S+_VERSION\\s+value: \"(?<currentValue>[^\"]+)\"\\s+- name: \\S+_COMMIT\\s+value: \"(?<currentDigest>[0-9a-f]{40})\""
+          ]
+        },
+        {
+          "customType": "regex",
           "description": "Keep NODE_VERSION in netlify.toml in sync with .node-version",
           "managerFilePatterns": ["/(^|/)netlify\\.toml$/"],
           "matchStrings": ["NODE_VERSION = \"(?<currentValue>[^\"]+)\""],

@@ -1,0 +1,96 @@
+---
+# Copies Home Assistant's encrypted backups to battlestation, so losing
+# hp-elitedesk (where the config volume lives) does not lose them too.
+# Home Assistant makes the backups itself, on the schedule set under
+# Settings > System > Backups. This job only fetches them over its API.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-copy
+  namespace: home-assistant
+  annotations:
+    # yamllint disable-line rule:line-length
+    checkov.io/skip1: CKV_K8S_35=The token comes from a sealed secret; an env var keeps the script simple
+spec:
+  # Home Assistant's automatic backup runs around 04:45; copy after it.
+  schedule: "30 6 * * *"
+  timeZone: America/Denver
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          # /data/backups on battlestation is where the vault backups live.
+          nodeSelector:
+            kubernetes.io/hostname: battlestation-ubuntu
+          securityContext:
+            runAsNonRoot: true
+            # benniemosher on battlestation, who owns /data/backups.
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: copy
+              image: docker.io/library/python:3.13.9-alpine3.22@sha256:e5fa639e49b85986c4481e28faa2564b45aa8021413f31026c3856e5911618b1
+              imagePullPolicy: IfNotPresent
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  pip install -q --no-cache-dir --disable-pip-version-check \
+                    --target /tmp/pkgs websockets==15.0.1
+                  PYTHONPATH=/tmp/pkgs exec python /script/backup_copy.py
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: HA_URL
+                  value: http://192.168.87.10:8123
+                - name: HA_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-copy
+                      key: ha-token
+                - name: DEST
+                  value: /backups
+                - name: KEEP
+                  value: "14"
+                - name: MAX_AGE_HOURS
+                  value: "36"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              volumeMounts:
+                - name: script
+                  mountPath: /script
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: script
+              configMap:
+                name: backup-copy
+            - name: backups
+              hostPath:
+                # Must already exist and belong to uid 1000; see the RUNBOOK.
+                path: /data/backups/home-assistant
+                type: Directory
+            - name: tmp
+              emptyDir: {}
