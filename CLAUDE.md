@@ -25,7 +25,7 @@ infrastructure.
 ### Deployment Pattern: OSS Helm Charts
 
 **IMPORTANT:** We use well-maintained open-source Helm charts, NOT plain manifests
-(except where no good Helm chart exists, like Homebridge).
+(except where no good Helm chart exists).
 
 Examples of the pattern:
 
@@ -87,7 +87,6 @@ homelab-gitops/
 │   └── sealed-secrets/
 ├── apps/                    # Applications
 │   ├── home-assistant/      # Home automation platform
-│   ├── homebridge/          # HomeKit bridge (plain manifests)
 │   ├── metallb/             # LoadBalancer provider
 │   ├── pihole/              # DNS/ad-blocking
 │   ├── tplink-sync/         # TP-Link device sync job
@@ -115,11 +114,9 @@ Each app directory contains:
 - **PiHole** (v2.34.0): DNS/ad-blocking - Web UI: `http://pihole.mosher-labs.local`,
   DNS LoadBalancer IP: `192.168.87.101`, Upstream DNS: Cloudflare (1.1.1.1, 1.0.0.1)
 
-- **Homebridge** (latest): HomeKit bridge - Web UI:
-  `http://homebridge.mosher-labs.local:8581`, Uses plain manifests (no good Helm
-  chart available), HostNetwork: true (required for mDNS/Bonjour), No device
-  plugins configured now (the old Ring and Kasa config is in
-  `apps/home-assistant/docs/homebridge-config-backup.json`), HomeKit PIN: 764-66-872
+- **Homebridge:** removed 2026-11-26. Home Assistant replaced it, and it had no
+  plugins or Apple Home pairing left. Its last config is in
+  `apps/home-assistant/docs/homebridge-config-backup.json`.
 
 - **Home Assistant** (2026.11.1): Home automation platform - LAN:
   `http://home-assistant.mosher-labs.local`, Public: `https://home.benniemosher.dev`
@@ -209,7 +206,6 @@ DHCP reservation in UniFi; the full IoT IP map is in `apps/home-assistant/RUNBOO
 
 **Integration Methods:**
 
-- Homebridge: plugin removed; old IPs in `apps/home-assistant/docs/homebridge-config-backup.json`
 - Home Assistant: TP-Link Kasa integration, added by IP (Kasa discovery is a
   broadcast and does not cross VLANs)
 
@@ -225,7 +221,6 @@ DHCP reservation in UniFi; the full IoT IP map is in `apps/home-assistant/RUNBOO
 
 **Integration:**
 
-- Homebridge: homebridge-ring plugin (refresh token based)
 - Home Assistant: Ring integration (credentials + 2FA)
 - Note: Ring cameras are battery-powered, use sparingly
 
@@ -236,15 +231,16 @@ Located in garage, requires HomeKit code from physical device for pairing.
 **Integration Options:**
 
 - Rachio 3: Native HomeKit support
-- Rachio 1/2: homebridge-rachio plugin OR Home Assistant integration
+- Home Assistant: paired over HomeKit for local zone control, plus the Rachio
+  cloud integration for rain delay, standby and schedules
 
 ### MyQ Garage Door Opener
 
-**Status:** homebridge-myq plugin RETIRED by developer
+**Status:** not integrated yet
 
 - Chamberlain/MyQ actively blocks third-party API access
 - No workaround available
-- **Alternative:** Ratgdo hardware (~$30) with homebridge-ratgdo plugin - Local control
+- **Alternative:** Ratgdo hardware (~$30), which Home Assistant supports - Local control
   bypassing MyQ cloud, Works with Chamberlain/LiftMaster Security+ 2.0
 
 ## Development Tools & Workflows
@@ -393,7 +389,6 @@ Example: Sealed secrets deploy before apps that consume them
 ### Port Notes
 
 - **9999:** TP-Link Kasa local control protocol (used by all smart plugs)
-- **8581:** Homebridge Web UI
 - **8123:** Home Assistant Web UI
 - **53:** DNS (PiHole)
 
@@ -462,14 +457,14 @@ apps/pihole/manifests/
 - **Don't use plain manifests** if a Helm chart exists
 - **Don't commit raw secrets** - always seal them first
 - **Don't skip pre-commit hooks** - they catch formatting issues
-- **Remember hostNetwork: true** for apps needing mDNS (Homebridge, HA)
+- **Remember hostNetwork: true** for apps needing mDNS (Home Assistant)
 - **Check sync waves** for dependency ordering
 - **Don't combine multiple resources in one YAML** - use separate files
 
 ### Home Assistant Migration Notes
 
-- Native integrations (TP-Link, Ring, Rachio) preferred over Homebridge plugins
-- Can run Homebridge as add-on inside HA for HomeKit support
+- Native integrations (TP-Link, Ring, Rachio) are used; Homebridge is gone
+- To show devices in Apple Home, use Home Assistant's HomeKit Bridge integration
 - All HA integrations configured via UI, not YAML
 - See `apps/home-assistant/docs/MIGRATION.md` for full guide
 

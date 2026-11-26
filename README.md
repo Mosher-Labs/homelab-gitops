@@ -34,7 +34,6 @@ homelab-gitops/
 └── apps/              # Applications
     ├── hello-world/
     ├── pihole/
-    ├── homebridge/
     └── jellyfin/
 ```
 
@@ -51,7 +50,6 @@ homelab-gitops/
 | ArgoCD | GitOps CD tool | ✅ Active |
 | hello-world | Testing | 🚧 In Progress |
 | PiHole | DNS/Ad-blocking | 📋 Planned |
-| Homebridge | HomeKit automation | 📋 Planned |
 | Jellyfin | Media server | 📋 Planned |
 
 ## 🔧 Local Development

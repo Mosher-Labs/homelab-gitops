@@ -77,9 +77,6 @@ spec:
             - name: grafana
               url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
               module: http_2xx
-            - name: homebridge
-              url: http://homebridge.homebridge.svc.cluster.local:8581/
-              module: http_2xx
             - name: pihole-dns
               url: pihole-dns-udp.pihole.svc.cluster.local:53
               module: dns_example_com
