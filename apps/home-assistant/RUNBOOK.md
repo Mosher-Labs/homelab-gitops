@@ -14,10 +14,12 @@ same pattern as `apps/garmin-mcp`.
   `local-path` config volume there on first sync, and local-path keeps it on
   that node.
 - **Networking:** `hostNetwork: true`. Home Assistant uses the node's
-  homelab-VLAN address. The homelab VLAN can reach the IoT VLAN, but the IoT
-  VLAN cannot reach back, so only integrations where Home Assistant opens the
-  connection work. Discovery (mDNS, SSDP) does not cross VLANs: add IoT
-  devices by IP.
+  homelab-VLAN address. The homelab VLAN can reach the IoT VLAN. The IoT
+  VLAN can reach only Home Assistant on port 8123 (so Google Cast devices can
+  fetch announcement audio), so otherwise only integrations where Home
+  Assistant opens the connection work. UniFi reflects mDNS between the VLANs,
+  so Cast and HomeKit devices are discovered. Broadcast discovery (Kasa) does
+  not cross: add those devices by IP.
 - **Auth:** Home Assistant's own login. The hostname has no Cloudflare Access
   gate, because the iPhone app cannot complete an Access login. Turn on MFA
   for every user.
@@ -72,8 +74,41 @@ the Activity sensor that run automations use.
 
 ## Adding IoT devices
 
-Add each IoT-VLAN device by IP in its integration's setup dialog.
-Auto-discovery only sees the homelab VLAN.
+Every IoT device has a DHCP reservation in UniFi. Add Kasa devices by IP in the
+integration's setup dialog; Cast and HomeKit devices show up through mDNS.
+
+| IP (192.168.3.x) | Device |
+| --- | --- |
+| .10, .11 | Ring Chime Pro (two MACs) |
+| .20 | Bar Lights |
+| .21 | Basement Lights |
+| .22 | Basement Media Lights |
+| .23 | Ceiling Fan |
+| .24 | Ceiling Fan Lights |
+| .25 | Girl's Bathroom Fan |
+| .26 | Girl's Bathroom Light |
+| .27 | Hallway Lights |
+| .28 | Kitchen Sink Lights |
+| .29 | Office Lights |
+| .30 | Patio Lights |
+| .31 | Sound bar (plug) |
+| .32 | Stair Lights |
+| .60 | Backyard Speaker (Google Home Mini) |
+| .61 | Basement Speaker |
+| .62 | Girl's Bathroom Speaker |
+| .63 | Kitchen Speaker |
+| .64 | Master Bedroom Speaker |
+| .80-.82 | Living Room, Maisie's Room, Master Bedroom TVs (Ethernet) |
+| .90-.92 | Same TVs (Wi-Fi) |
+| .100 | Ring Doorbell |
+| .101-.104 | Backyard, Garage, Garden, Side Yard cameras (Ring) |
+| .110 | Garage Door (MyQ) |
+| .120 | Thermostat (Ecobee) |
+| .121 | Sprinklers (Rachio) |
+| .140 | Samsung Refrigerator |
+| .141 | Mr. Clean (Wyze vacuum) |
+
+The DHCP pool is .200-.254, so a new device lands there until it gets a reservation.
 
 ## Upgrading
 

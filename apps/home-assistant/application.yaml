@@ -29,9 +29,9 @@ spec:
               pod:
                 # Host networking so Home Assistant can reach devices on the
                 # IoT VLAN from the node's address and advertise HomeKit
-                # Bridge over mDNS on the homelab VLAN. The IoT VLAN cannot
-                # reach the homelab VLAN, so every integration must be one
-                # where Home Assistant opens the connection.
+                # Bridge over mDNS on the homelab VLAN. The IoT VLAN can
+                # reach only port 8123 here, so every other integration must
+                # be one where Home Assistant opens the connection.
                 hostNetwork: true
                 dnsPolicy: ClusterFirstWithHostNet
                 # The config volume (local-path) already lives here.

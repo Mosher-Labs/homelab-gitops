@@ -11,10 +11,11 @@ infrastructure.
 
 **Key Details:**
 
-- **Cluster Type:** 3-node k3s
+- **Cluster Type:** 2-node k3s (hp-elitedesk, battlestation-ubuntu)
 - **GitOps Tool:** ArgoCD (self-managed from this repo)
 - **Deployment Pattern:** OSS Helm charts with ArgoCD Applications
-- **Network:** 192.168.3.x (local LAN), 192.168.87.x (MetalLB pool)
+- **Network:** nodes and MetalLB pool on the Homelab VLAN (192.168.87.0/24); smart
+  devices on the IoT VLAN (192.168.3.0/24)
 - **Ingress:** Traefik (*.mosher-labs.local for internal access)
 - **Storage:** NFS backed (Drobo) + local persistent volumes
 - **Timezone:** America/Denver
@@ -116,14 +117,15 @@ Each app directory contains:
 
 - **Homebridge** (latest): HomeKit bridge - Web UI:
   `http://homebridge.mosher-labs.local:8581`, Uses plain manifests (no good Helm
-  chart available), HostNetwork: true (required for mDNS/Bonjour), Configured
-  plugins: homebridge-ring, homebridge-tplink-smarthome, HomeKit PIN: 764-66-872
+  chart available), HostNetwork: true (required for mDNS/Bonjour), No device
+  plugins configured now (the old Ring and Kasa config is in
+  `apps/home-assistant/docs/homebridge-config-backup.json`), HomeKit PIN: 764-66-872
 
 - **Home Assistant** (2026.11.1): Home automation platform - LAN:
   `http://home-assistant.mosher-labs.local`, Public: `https://home.benniemosher.dev`
   (no Access gate, HA login + MFA), bjw-s app-template + cloudflared sidecar,
   HostNetwork: true pinned to hp-elitedesk, 20Gi PVC. IoT devices are on a
-  separate VLAN: add them by IP. See `apps/home-assistant/RUNBOOK.md`
+  separate VLAN with fixed IPs: add Kasa devices by IP. See `apps/home-assistant/RUNBOOK.md`
 
 - **TP-Link Sync** (custom): Syncs TP-Link device names to Git - CronJob: Periodic
   sync, Python script with UniFi and GitHub integration
@@ -186,28 +188,30 @@ Each app directory contains:
 
 ## Smart Home Device Context
 
-### TP-Link Kasa Devices (192.168.3.x network)
+### TP-Link Kasa Devices (IoT VLAN, 192.168.3.0/24)
 
-All TP-Link smart plugs/switches use **port 9999** for local control.
+All TP-Link smart plugs/switches use **port 9999** for local control. Each has a
+DHCP reservation in UniFi; the full IoT IP map is in `apps/home-assistant/RUNBOOK.md`.
 
-**Discovered Devices:**
-
-- Stair Lights (192.168.3.125)
-- Ceiling Fan Light (192.168.3.229)
-- Ceiling Fan (192.168.3.44)
-- Basement Media Lights (192.168.3.225)
-- Basement Lights (192.168.3.195)
-- Bar Lights (192.168.3.134)
-- Office Lights (192.168.3.25)
-- Hallway Lights (192.168.3.140)
-- Patio Lights (192.168.3.138)
-- Sound bar (192.168.3.26)
-- Plus additional devices
+- Bar Lights (192.168.3.20)
+- Basement Lights (192.168.3.21)
+- Basement Media Lights (192.168.3.22)
+- Ceiling Fan (192.168.3.23)
+- Ceiling Fan Lights (192.168.3.24)
+- Girl's Bathroom Fan (192.168.3.25)
+- Girl's Bathroom Light (192.168.3.26)
+- Hallway Lights (192.168.3.27)
+- Kitchen Sink Lights (192.168.3.28)
+- Office Lights (192.168.3.29)
+- Patio Lights (192.168.3.30)
+- Sound bar (192.168.3.31)
+- Stair Lights (192.168.3.32)
 
 **Integration Methods:**
 
-- Homebridge: homebridge-tplink-smarthome plugin (static IPs configured)
-- Home Assistant: TP-Link Kasa integration (auto-discovery)
+- Homebridge: plugin removed; old IPs in `apps/home-assistant/docs/homebridge-config-backup.json`
+- Home Assistant: TP-Link Kasa integration, added by IP (Kasa discovery is a
+  broadcast and does not cross VLANs)
 
 ### Ring Devices
 
@@ -371,7 +375,9 @@ Example: Sealed secrets deploy before apps that consume them
 
 ### Local Network
 
-- **Range:** 192.168.3.0/24
+- **Homelab VLAN:** 192.168.87.0/24 (k3s nodes, MetalLB)
+- **IoT VLAN:** 192.168.3.0/24 (smart devices, fixed IPs .10-.141, DHCP pool .200-.254)
+- **Main LAN (Yggdrasil):** 192.168.200.0/22
 - **DNS:** PiHole at 192.168.87.101
 - **Ingress Domain:** *.mosher-labs.local (Traefik)
 

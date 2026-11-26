@@ -3,8 +3,9 @@
 > **Superseded in part (2026-11-14).** Home Assistant now runs as a container
 > on k3s (see `../RUNBOOK.md`), and container installs have no add-ons, so the
 > Homebridge add-on steps below do not apply. Use Home Assistant's HomeKit
-> Bridge integration instead. The device IPs below are on the IoT VLAN; add
-> them by IP, since discovery does not cross VLANs.
+> Bridge integration instead. The device IPs below were renumbered on
+> 2026-11-25; `../RUNBOOK.md` has the current IoT IP map. Add Kasa devices by IP,
+> since their broadcast discovery does not cross VLANs.
 
 This guide walks through deploying Home Assistant to the Kubernetes cluster
 and migrating Homebridge to run as a Home Assistant add-on.
@@ -59,22 +60,23 @@ Homebridge plugins:
 1. Navigate to **Settings → Devices & Services**
 1. Click **Add Integration**
 1. Search for "TP-Link Kasa Smart"
-1. **Auto-discovery** should find all your devices on `192.168.3.x`
-1. Alternatively, manually add each device IP if needed
+1. Add each device by IP (auto-discovery does not reach the IoT VLAN)
 
-**Devices that will be discovered:**
+**Devices (IoT VLAN):**
 
-- Stair Lights (192.168.3.125)
-- Ceiling Fan Light (192.168.3.229)
-- Basement Media Lights (192.168.3.225)
-- Bar Lights (192.168.3.134)
-- Sound bar (192.168.3.26)
-- Basement Lights (192.168.3.195)
-- Office Lights (192.168.3.25)
-- Ceiling Fan (192.168.3.44)
-- Patio Lights (192.168.3.138)
-- Hallway Lights (192.168.3.140)
-- Plus 3 more devices
+- Bar Lights (192.168.3.20)
+- Basement Lights (192.168.3.21)
+- Basement Media Lights (192.168.3.22)
+- Ceiling Fan (192.168.3.23)
+- Ceiling Fan Lights (192.168.3.24)
+- Girl's Bathroom Fan (192.168.3.25)
+- Girl's Bathroom Light (192.168.3.26)
+- Hallway Lights (192.168.3.27)
+- Kitchen Sink Lights (192.168.3.28)
+- Office Lights (192.168.3.29)
+- Patio Lights (192.168.3.30)
+- Sound bar (192.168.3.31)
+- Stair Lights (192.168.3.32)
 
 #### Ring Integration
 
@@ -241,7 +243,7 @@ If TP-Link devices aren't auto-discovered:
 
 1. Verify Home Assistant pod is using `hostNetwork: true`
 1. Check devices are reachable:
-   `kubectl exec -n home-assistant <pod> -- ping 192.168.3.125`
+   `kubectl exec -n home-assistant <pod> -- ping 192.168.3.32`
 1. Manually add integration with device IP addresses
 
 ### Ring Authentication Issues
